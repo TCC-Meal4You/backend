@@ -23,8 +23,8 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.buscarUsuarioPorEmail(email));
     }
     @DeleteMapping
-    public ResponseEntity<Void> deletarUsuarioPorEmail(@RequestParam String email){
-        usuarioService.deletarUsuarioPorEmail(email);
+    public ResponseEntity<Void> deletarUsuarioPorEmail(@RequestParam String email, @RequestParam String senha){
+        usuarioService.deletarUsuarioPorEmail(email, senha);
         return ResponseEntity.ok().build();
     }
     @PutMapping
