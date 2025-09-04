@@ -10,15 +10,15 @@ import java.util.Optional;
 public class AdmRestauranteService {
     private AdmRestauranteRepository repository;
 
-    public AdmRestauranteService(AdmRestauranteRepository repository) {this.repository = repository;}
+    public AdmRestauranteService(AdmRestauranteRepository repository) {
+        this.repository = repository;
+    }
 
-
-
-    public void salvarUsuario(AdmRestaurante admRestaurante){
+    public void salvarUsuario(AdmRestaurante admRestaurante) {
         repository.saveAndFlush(admRestaurante);
     }
 
-    public Optional<AdmRestaurante> buscarPorEmail(String email){
+    public Optional<AdmRestaurante> buscarPorEmail(String email) {
         return repository.findByEmail(email);
     }
 
@@ -36,8 +36,12 @@ public class AdmRestauranteService {
         repository.saveAndFlush(admAtualizado);
     }
 
-    public void deletarPorEmail(String email){
+    public void deletarPorEmail(String email, String senha) {
+        AdmRestaurante admRestaurante = repository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email não encontrado"));
+        if (!admRestaurante.getSenha().equals(senha)) {
+            throw new RuntimeException("Senha incorreta");
+        }
         repository.deleteByEmail(email);
     }
-
 }
