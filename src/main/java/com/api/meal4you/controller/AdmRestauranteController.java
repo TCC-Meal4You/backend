@@ -33,8 +33,8 @@ public class AdmRestauranteController {
     }
 
     @DeleteMapping("/email")
-    public ResponseEntity<Void> deletarUsuarioPorEmail(@RequestParam String email) {
-        admRestauranteService.deletarPorEmail(email);
+    public ResponseEntity<Void> deletarAdmPorEmail(@RequestParam String email, String senha) {
+        admRestauranteService.deletarPorEmail(email, senha);
         return ResponseEntity.ok().build();
     }
 }

@@ -31,19 +31,21 @@ public class UsuarioService {
     }
 
     public void atualizarUsuarioPorId(int id, Usuario usuario) {
+        if (usuario.getData_nascimento() == null) {
+            throw new RuntimeException("Data de nascimento não pode ser nula ou vazia");
+        }
+
         Usuario usuarioEntity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario não encontrado"));
+
         Usuario usuarioAtualizado = Usuario.builder()
                 .id(usuarioEntity.getId())
                 .email(usuario.getEmail() != null ? usuario.getEmail() : usuarioEntity.getEmail())
                 .nome(usuario.getNome() != null ? usuario.getNome() : usuarioEntity.getNome())
                 .senha(usuario.getSenha() != null ? usuario.getSenha() : usuarioEntity.getSenha())
-                .localizacao(
-                        usuario.getLocalizacao() != null ? usuario.getLocalizacao() : usuarioEntity.getLocalizacao())
-                .data_nascimento(usuario.getData_nascimento() != null ? usuario.getData_nascimento()
-                        : usuarioEntity.getData_nascimento())
-                .tempo_disponivel(usuario.getTempo_disponivel() != null ? usuario.getTempo_disponivel()
-                        : usuarioEntity.getTempo_disponivel())
+                .localizacao(usuario.getLocalizacao() != null ? usuario.getLocalizacao() : usuarioEntity.getLocalizacao())
+                .data_nascimento(usuario.getData_nascimento())
+                .tempo_disponivel(usuario.getTempo_disponivel() != null ? usuario.getTempo_disponivel() : usuarioEntity.getTempo_disponivel())
                 .build();
 
         repository.saveAndFlush(usuarioAtualizado);
