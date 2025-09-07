@@ -14,8 +14,8 @@ public class AdmRestauranteController {
     private final AdmRestauranteService admRestauranteService;
 
     @PostMapping("/cadastrar")
-    public ResponseEntity<Void> cadastrarUsuario(@RequestBody AdmRestaurante admRestaurante) {
-        admRestauranteService.salvarUsuario(admRestaurante);
+    public ResponseEntity<Void> cadastrarAdm(@RequestBody AdmRestaurante admRestaurante) {
+        admRestauranteService.cadastararAdm(admRestaurante);
         return ResponseEntity.ok().build();
     }
 

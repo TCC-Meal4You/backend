@@ -20,7 +20,7 @@ public class AdmRestaurante {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private int id_admin;
 
     @NotNull
     @NotBlank

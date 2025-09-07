@@ -2,32 +2,32 @@ package com.api.meal4you.service;
 
 import com.api.meal4you.entity.Usuario;
 import com.api.meal4you.repository.UsuarioRepository;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UsuarioService {
-    private final UsuarioRepository repository;
+    private final UsuarioRepository usuarioRepository;
 
-    public UsuarioService(UsuarioRepository repository) {
-        this.repository = repository;
-    }
-
-    public void salvarUsuario(Usuario usuario) {
-        repository.saveAndFlush(usuario);
+    public void cadastrarUsuario(Usuario usuario) {
+        usuarioRepository.saveAndFlush(usuario);
     }
 
     public Usuario buscarUsuarioPorEmail(String email) {
-        return repository.findByEmail(email).orElseThrow(
+        return usuarioRepository.findByEmail(email).orElseThrow(
                 () -> new RuntimeException("Email não encontrado"));
     }
 
     public void deletarUsuarioPorEmail(String email, String senha) {
-        Usuario usuario = repository.findByEmail(email)
+        Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email não encontrado"));
         if (!usuario.getSenha().equals(senha)) {
             throw new RuntimeException("Senha incorreta");
         }
-        repository.deleteByEmail(email);
+        usuarioRepository.deleteByEmail(email);
     }
 
     public void atualizarUsuarioPorId(int id, Usuario usuario) {
@@ -35,11 +35,11 @@ public class UsuarioService {
             throw new RuntimeException("Data de nascimento não pode ser nula ou vazia");
         }
 
-        Usuario usuarioEntity = repository.findById(id)
+        Usuario usuarioEntity = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario não encontrado"));
 
         Usuario usuarioAtualizado = Usuario.builder()
-                .id(usuarioEntity.getId())
+                .id_usuario(usuarioEntity.getId_usuario())
                 .email(usuario.getEmail() != null ? usuario.getEmail() : usuarioEntity.getEmail())
                 .nome(usuario.getNome() != null ? usuario.getNome() : usuarioEntity.getNome())
                 .senha(usuario.getSenha() != null ? usuario.getSenha() : usuarioEntity.getSenha())
@@ -48,6 +48,6 @@ public class UsuarioService {
                 .tempo_disponivel(usuario.getTempo_disponivel() != null ? usuario.getTempo_disponivel() : usuarioEntity.getTempo_disponivel())
                 .build();
 
-        repository.saveAndFlush(usuarioAtualizado);
+        usuarioRepository.saveAndFlush(usuarioAtualizado);
     }
 }

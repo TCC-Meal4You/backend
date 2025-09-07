@@ -25,7 +25,7 @@ import lombok.Builder;
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private int id_usuario;
 
     @NotNull
     @NotBlank
@@ -47,7 +47,7 @@ public class Usuario {
     
     @NotNull
     @NotBlank
-    @Size(max = 200)
+    @Size(min= 4,max = 200)
     @Column(length = 200)
     private String localizacao;
     
