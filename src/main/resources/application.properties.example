@@ -19,3 +19,6 @@ spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
 # Swagger (springdoc-openapi)
 springdoc.api-docs.path=/v3/api-docs
 springdoc.swagger-ui.path=/swagger-ui
+
+# Faz com que a mensagem da exceção seja sempre incluída na resposta de erro padrão
+server.error.include-message=always

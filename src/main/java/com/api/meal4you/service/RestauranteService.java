@@ -5,11 +5,14 @@ import com.api.meal4you.entity.Restaurante;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -20,13 +23,14 @@ public class RestauranteService {
 
     public void cadastrarRestaurante(Restaurante restaurante, Integer idAdmin) {
         AdmRestaurante adminExistente = admRestauranteRepository.findById(idAdmin)
-                .orElseThrow(() -> new RuntimeException("Admin não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin não encontrado"));
 
         boolean existe = restauranteRepository.findByNomeAndLocalizacao(
                 restaurante.getNome(), restaurante.getLocalizacao()).isPresent();
 
         if (existe) {
-            throw new RuntimeException("Já existe um restaurante com esse nome e localização");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Já existe um restaurante com esse nome e localização");
         }
 
         restaurante.setAdmin(adminExistente);
@@ -37,25 +41,53 @@ public class RestauranteService {
         return restauranteRepository.findAll();
     }
 
+    @Transactional
     public void atualizarPorId(int id, Restaurante restaurante) {
         Restaurante restauranteEntity = restauranteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Restaurante não encontrado"));
 
-        if (restaurante.getNome() != null)
+        boolean alterado = false;
+
+        // Atualiza o nome
+        if (restaurante.getNome() != null && !restaurante.getNome().isBlank()
+                && !restaurante.getNome().equals(restauranteEntity.getNome())) {
             restauranteEntity.setNome(restaurante.getNome());
-        if (restaurante.getLocalizacao() != null)
+            alterado = true;
+        }
+
+        // Atualiza a localização
+        if (restaurante.getLocalizacao() != null && !restaurante.getLocalizacao().isBlank()
+                && !restaurante.getLocalizacao().equals(restauranteEntity.getLocalizacao())) {
             restauranteEntity.setLocalizacao(restaurante.getLocalizacao());
-        if (restaurante.getTipo_comida() != null)
+            alterado = true;
+        }
+
+        // Atualiza o tipo de comida
+        if (restaurante.getTipo_comida() != null && !restaurante.getTipo_comida().isBlank()
+                && !restaurante.getTipo_comida().equals(restauranteEntity.getTipo_comida())) {
             restauranteEntity.setTipo_comida(restaurante.getTipo_comida());
-        restauranteEntity.setAberto(restaurante.isAberto());
-        
-        restauranteRepository.saveAndFlush(restauranteEntity);
+            alterado = true;
+        }
+
+        // Atualiza o status aberto/fechado se houver alteração
+        if (restauranteEntity.isAberto() != restaurante.isAberto()) {
+            restauranteEntity.setAberto(restaurante.isAberto());
+            alterado = true;
+        }
+
+        if (!alterado) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nenhuma alteração detectada.");
+        }
+
+        restauranteRepository.save(restauranteEntity);
     }
 
     public void deletarRestaurante(String nome, String localizacao) {
         Restaurante restaurante = restauranteRepository
                 .findByNomeAndLocalizacao(nome, localizacao)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
                         "Não existe restaurante com nome '" + nome + "' e localização '" + localizacao + "'"));
 
         restauranteRepository.delete(restaurante);
