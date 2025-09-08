@@ -21,9 +21,7 @@ public class AdmRestauranteController {
 
     @GetMapping("/email")
     public ResponseEntity<AdmRestaurante> buscarPorEmail(@RequestParam String email) {
-        return admRestauranteService.buscarPorEmail(email)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.ok(admRestauranteService.buscarPorEmail(email));
     }
 
     @PutMapping("/{id}")
@@ -38,4 +36,3 @@ public class AdmRestauranteController {
         return ResponseEntity.ok().build();
     }
 }
-
