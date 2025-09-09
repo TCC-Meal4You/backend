@@ -49,28 +49,24 @@ public class RestauranteService {
 
         boolean alterado = false;
 
-        // Atualiza o nome
         if (restaurante.getNome() != null && !restaurante.getNome().isBlank()
                 && !restaurante.getNome().equals(restauranteEntity.getNome())) {
             restauranteEntity.setNome(restaurante.getNome());
             alterado = true;
         }
 
-        // Atualiza a localização
         if (restaurante.getLocalizacao() != null && !restaurante.getLocalizacao().isBlank()
                 && !restaurante.getLocalizacao().equals(restauranteEntity.getLocalizacao())) {
             restauranteEntity.setLocalizacao(restaurante.getLocalizacao());
             alterado = true;
         }
 
-        // Atualiza o tipo de comida
         if (restaurante.getTipo_comida() != null && !restaurante.getTipo_comida().isBlank()
                 && !restaurante.getTipo_comida().equals(restauranteEntity.getTipo_comida())) {
             restauranteEntity.setTipo_comida(restaurante.getTipo_comida());
             alterado = true;
         }
 
-        // Atualiza o status aberto/fechado se houver alteração
         if (restauranteEntity.isAberto() != restaurante.isAberto()) {
             restauranteEntity.setAberto(restaurante.isAberto());
             alterado = true;
