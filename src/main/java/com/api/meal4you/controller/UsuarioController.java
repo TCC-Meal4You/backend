@@ -3,6 +3,9 @@ package com.api.meal4you.controller;
 import com.api.meal4you.entity.Usuario;
 import com.api.meal4you.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,5 +37,12 @@ public class UsuarioController {
     public ResponseEntity<Void> deletarUsuarioPorEmail(@RequestParam String email, @RequestParam String senha) {
         usuarioService.deletarUsuarioPorEmail(email, senha);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Usuario usuario) {
+        Map<String, Object> response = usuarioService.fazerLogin(
+                usuario.getEmail(), usuario.getSenha());
+        return ResponseEntity.ok(response);
     }
 }

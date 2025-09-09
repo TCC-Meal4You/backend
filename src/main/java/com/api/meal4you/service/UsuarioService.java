@@ -6,6 +6,9 @@ import com.api.meal4you.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -81,5 +84,25 @@ public class UsuarioService {
         }
 
         usuarioRepository.save(usuarioEntity);
+    }
+
+
+    public Map<String, Object> fazerLogin(String email, String senha) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
+        
+            if (!usuario.getSenha().equals(senha)) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreto");
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", usuario.getId_usuario());
+            response.put("nome", usuario.getNome());
+            response.put("email", usuario.getEmail());
+            response.put("localizacao", usuario.getLocalizacao());
+            response.put("data_nascimento", usuario.getData_nascimento());
+            response.put("tempo_disponivel", usuario.getTempo_disponivel());
+
+            return response;
     }
 }
