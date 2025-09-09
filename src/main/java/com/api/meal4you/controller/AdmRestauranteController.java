@@ -3,6 +3,9 @@ package com.api.meal4you.controller;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.service.AdmRestauranteService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,4 +38,12 @@ public class AdmRestauranteController {
         admRestauranteService.deletarPorEmail(email, senha);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> login(@RequestBody AdmRestaurante admRestaurante) {
+        Map<String, Object> response = admRestauranteService.fazerLogin(
+                admRestaurante.getEmail(), admRestaurante.getSenha());
+        return ResponseEntity.ok(response);
+    }
+
 }
