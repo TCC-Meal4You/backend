@@ -44,18 +44,4 @@ public class Usuario {
     @Size(min = 6,max = 60)
     @Column(length = 60)
     private String senha;
-    
-    @NotBlank
-    @Size(min= 4,max = 200)
-    @Column(length = 200)
-    private String localizacao;
-    
-    @Past
-    @NotNull
-    @Schema(type = "string", example = "dd/MM/yyyy")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    private LocalDate data_nascimento;
-    
-    private Integer tempo_disponivel;
-    //private Preferencias id_preferencia; Colocar quando tiver a entidade preferencias
 }
