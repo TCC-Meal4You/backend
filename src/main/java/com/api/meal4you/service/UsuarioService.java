@@ -1,14 +1,14 @@
 package com.api.meal4you.service;
 
+import com.api.meal4you.dto.UsuarioRequestDTO;
+import com.api.meal4you.dto.UsuarioResponseDTO;
 import com.api.meal4you.entity.Usuario;
+import com.api.meal4you.mapper.UsuarioMapper;
 import com.api.meal4you.repository.UsuarioRepository;
-
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-
 import java.util.HashMap;
 import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,18 +18,24 @@ import org.springframework.web.server.ResponseStatusException;
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
 
-    public void cadastrarUsuario(Usuario usuario) {
-        usuarioRepository.saveAndFlush(usuario); // Lembrar de criptografar!
+    public UsuarioResponseDTO cadastrarUsuario(UsuarioRequestDTO dto) {
+        Usuario usuario = UsuarioMapper.toEntity(dto);
+
+        //aplicar criptografia da senha aqui
+        usuarioRepository.saveAndFlush(usuario);
+        return UsuarioMapper.toResponse(usuario);
     }
 
-    public Usuario buscarUsuarioPorEmail(String email) {
-        return usuarioRepository.findByEmail(email)
+    public UsuarioResponseDTO buscarUsuarioPorEmail(String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
+        return UsuarioMapper.toResponse(usuario);
     }
 
     public void deletarUsuarioPorEmail(String email, String senha) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
+
         if (!usuario.getSenha().equals(senha)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
         }
@@ -37,45 +43,27 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void atualizarUsuarioPorId(int id, Usuario usuario) {
+    public UsuarioResponseDTO atualizarUsuarioPorId(int id, UsuarioRequestDTO dto) {
         Usuario usuarioEntity = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
         boolean alterado = false;
 
-        if (usuario.getNome() != null && !usuario.getNome().isBlank()
-                && !usuario.getNome().equals(usuarioEntity.getNome())) {
-            usuarioEntity.setNome(usuario.getNome());
+        if (dto.getNome() != null && !dto.getNome().isBlank()
+                && !dto.getNome().equals(usuarioEntity.getNome())) {
+            usuarioEntity.setNome(dto.getNome());
             alterado = true;
         }
 
-        if (usuario.getEmail() != null && !usuario.getEmail().isBlank()
-                && !usuario.getEmail().equals(usuarioEntity.getEmail())) {
-            usuarioEntity.setEmail(usuario.getEmail());
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()
+                && !dto.getEmail().equals(usuarioEntity.getEmail())) {
+            usuarioEntity.setEmail(dto.getEmail());
             alterado = true;
         }
 
-        if (usuario.getSenha() != null && !usuario.getSenha().isBlank()
-                && !usuario.getSenha().equals(usuarioEntity.getSenha())) {
-            usuarioEntity.setSenha(usuario.getSenha()); // Lembrar de criptografar!
-            alterado = true;
-        }
-
-        if (usuario.getLocalizacao() != null && !usuario.getLocalizacao().isBlank()
-                && !usuario.getLocalizacao().equals(usuarioEntity.getLocalizacao())) {
-            usuarioEntity.setLocalizacao(usuario.getLocalizacao());
-            alterado = true;
-        }
-
-        if (usuario.getData_nascimento() != null
-                && !usuario.getData_nascimento().equals(usuarioEntity.getData_nascimento())) {
-            usuarioEntity.setData_nascimento(usuario.getData_nascimento());
-            alterado = true;
-        }
-
-        if (usuario.getTempo_disponivel() != null
-                && !usuario.getTempo_disponivel().equals(usuarioEntity.getTempo_disponivel())) {
-            usuarioEntity.setTempo_disponivel(usuario.getTempo_disponivel());
+        if (dto.getSenha() != null && !dto.getSenha().isBlank()
+                && !dto.getSenha().equals(usuarioEntity.getSenha())) {
+            usuarioEntity.setSenha(dto.getSenha()); //criptografar
             alterado = true;
         }
 
@@ -84,25 +72,22 @@ public class UsuarioService {
         }
 
         usuarioRepository.save(usuarioEntity);
+        return UsuarioMapper.toResponse(usuarioEntity);
     }
-
 
     public Map<String, Object> fazerLogin(String email, String senha) {
         Usuario usuario = usuarioRepository.findByEmail(email)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
-        
-            if (!usuario.getSenha().equals(senha)) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreto");
-            }
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", usuario.getId_usuario());
-            response.put("nome", usuario.getNome());
-            response.put("email", usuario.getEmail());
-            response.put("localizacao", usuario.getLocalizacao());
-            response.put("data_nascimento", usuario.getData_nascimento());
-            response.put("tempo_disponivel", usuario.getTempo_disponivel());
+        if (!usuario.getSenha().equals(senha)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreto");
+        }
 
-            return response;
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", usuario.getId_usuario());
+        response.put("nome", usuario.getNome());
+        response.put("email", usuario.getEmail());
+
+        return response;
     }
 }
