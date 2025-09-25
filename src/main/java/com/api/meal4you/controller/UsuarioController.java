@@ -32,10 +32,7 @@ public class UsuarioController {
     }
 
     @PutMapping
-    public ResponseEntity<UsuarioResponseDTO> atualizarUsuarioPorId(
-            @RequestParam int id,
-            @RequestBody UsuarioRequestDTO dto) {
-
+    public ResponseEntity<UsuarioResponseDTO> atualizarUsuarioPorId(@RequestParam int id, @RequestBody UsuarioRequestDTO dto) {
         UsuarioResponseDTO response = usuarioService.atualizarUsuarioPorId(id, dto);
         return ResponseEntity.ok(response);
     }
