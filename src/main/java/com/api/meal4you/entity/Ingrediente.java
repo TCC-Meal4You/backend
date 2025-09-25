@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.List;
 
 @Getter
 @Setter
@@ -17,7 +18,7 @@ import lombok.Setter;
 @Builder
 @Entity
 
-public class Ingredientes {
+public class Ingrediente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id_ingrediente;
@@ -31,4 +32,7 @@ public class Ingredientes {
     @ManyToOne
     @JoinColumn(name = "id_admin", referencedColumnName = "id_admin", nullable = false)
     private AdmRestaurante admin;
+
+    @ManyToMany(mappedBy = "ingredientes")
+    private List<Refeicao> refeicoes;
 }

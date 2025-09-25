@@ -1,5 +1,7 @@
 package com.api.meal4you.controller;
 
+import com.api.meal4you.dto.AdmRestauranteRequestDTO;
+import com.api.meal4you.dto.AdmRestauranteResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.service.AdmRestauranteService;
 import lombok.RequiredArgsConstructor;
@@ -16,21 +18,23 @@ public class AdmRestauranteController {
 
     private final AdmRestauranteService admRestauranteService;
 
-    @PostMapping("/cadastrar")
-    public ResponseEntity<Void> cadastrarAdm(@RequestBody AdmRestaurante admRestaurante) {
-        admRestauranteService.cadastararAdm(admRestaurante);
-        return ResponseEntity.ok().build();
+    @PostMapping
+    public ResponseEntity<AdmRestauranteResponseDTO> cadastrarAdm(@RequestBody AdmRestauranteRequestDTO dto) {
+
+        AdmRestauranteResponseDTO response = admRestauranteService.cadastrarAdm(dto);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/email")
-    public ResponseEntity<AdmRestaurante> buscarPorEmail(@RequestParam String email) {
-        return ResponseEntity.ok(admRestauranteService.buscarPorEmail(email));
+    public ResponseEntity<AdmRestauranteResponseDTO> buscarPorEmail(@RequestParam String email) {
+        AdmRestauranteResponseDTO response = admRestauranteService.buscarPorEmail(email);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> atualizarPorId(@PathVariable int id, @RequestBody AdmRestaurante admRestaurante) {
-        admRestauranteService.atualizarPorId(id, admRestaurante);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<AdmRestauranteResponseDTO> atualizarPorId(@PathVariable int id, @RequestBody AdmRestauranteRequestDTO dto) {
+        AdmRestauranteResponseDTO response = admRestauranteService.atualizarPorId(id, dto);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/email")
@@ -40,9 +44,9 @@ public class AdmRestauranteController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody AdmRestaurante admRestaurante) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody AdmRestauranteRequestDTO dto) {
         Map<String, Object> response = admRestauranteService.fazerLogin(
-                admRestaurante.getEmail(), admRestaurante.getSenha());
+                dto.getEmail(), dto.getSenha());
         return ResponseEntity.ok(response);
     }
 

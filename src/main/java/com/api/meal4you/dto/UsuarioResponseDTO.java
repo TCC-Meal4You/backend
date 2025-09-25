@@ -11,10 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class UsuarioResponseDTO {
-    @NotBlank
+
     private String nome;
-
-    @Email
     private String email;
-
 }
