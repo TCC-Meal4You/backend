@@ -1,6 +1,9 @@
 package com.api.meal4you.service;
 
+import com.api.meal4you.dto.AdmRestauranteRequestDTO;
+import com.api.meal4you.dto.AdmRestauranteResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
+import com.api.meal4you.mapper.AdmRestauranteMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 
 import jakarta.transaction.Transactional;
@@ -18,38 +21,41 @@ import org.springframework.web.server.ResponseStatusException;
 public class AdmRestauranteService {
     private final AdmRestauranteRepository admRepository;
 
-    public void cadastararAdm(AdmRestaurante admRestaurante) {
+    public AdmRestauranteResponseDTO cadastrarAdm(AdmRestauranteRequestDTO dto) {
+        AdmRestaurante admRestaurante = AdmRestauranteMapper.toEntity(dto);
         admRepository.saveAndFlush(admRestaurante); // Lembra de cripitografar senha
+        return AdmRestauranteMapper.toResponse(admRestaurante);
     }
 
-    public AdmRestaurante buscarPorEmail(String email) {
-        return admRepository.findByEmail(email)
+    public AdmRestauranteResponseDTO buscarPorEmail(String email) {
+        AdmRestaurante adm = admRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
+        return AdmRestauranteMapper.toResponse(adm);
     }
 
     @Transactional
-    public void atualizarPorId(int id, AdmRestaurante admRestaurante) {
+    public AdmRestauranteResponseDTO atualizarPorId(int id, AdmRestauranteRequestDTO dto) {
         AdmRestaurante admEntity = admRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Administrador de restaurante não encontrado"));
 
         boolean alterado = false;
 
-        if (admRestaurante.getNome() != null && !admRestaurante.getNome().isBlank()
-                && !admRestaurante.getNome().equals(admEntity.getNome())) {
-            admEntity.setNome(admRestaurante.getNome());
+        if (dto.getNome() != null && !dto.getNome().isBlank()
+                && !dto.getNome().equals(admEntity.getNome())) {
+            admEntity.setNome(dto.getNome());
             alterado = true;
         }
 
-        if (admRestaurante.getEmail() != null && !admRestaurante.getEmail().isBlank()
-                && !admRestaurante.getEmail().equals(admEntity.getEmail())) {
-            admEntity.setEmail(admRestaurante.getEmail());
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()
+                && !dto.getEmail().equals(admEntity.getEmail())) {
+            admEntity.setEmail(dto.getEmail());
             alterado = true;
         }
 
-        if (admRestaurante.getSenha() != null && !admRestaurante.getSenha().isBlank()
-                && !admRestaurante.getSenha().equals(admEntity.getSenha())) {
-            admEntity.setSenha(admRestaurante.getSenha()); // Lembrar de criptografar senha!
+        if (dto.getSenha() != null && !dto.getSenha().isBlank()
+                && !dto.getSenha().equals(admEntity.getSenha())) {
+            admEntity.setSenha(dto.getSenha()); // Lembrar de criptografar senha!
             alterado = true;
         }
 
@@ -58,6 +64,7 @@ public class AdmRestauranteService {
         }
 
         admRepository.save(admEntity);
+        return AdmRestauranteMapper.toResponse(admEntity);
     }
 
     public void deletarPorEmail(String email, String senha) { //Lembra
