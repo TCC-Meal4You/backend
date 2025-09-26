@@ -1,6 +1,7 @@
 package com.api.meal4you.controller;
 
-import com.api.meal4you.entity.Restaurante;
+import com.api.meal4you.dto.RestauranteRequestDTO;
+import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.service.RestauranteService;
 import lombok.RequiredArgsConstructor;
 
@@ -17,21 +18,21 @@ public class RestauranteController {
 
     private final RestauranteService restauranteService;
 
-    @PostMapping("/cadastrar/{idAdmin}")
-    public ResponseEntity<Void> cadastrarRestaurante(@RequestBody Restaurante restaurante, @PathVariable Integer idAdmin) {
-        restauranteService.cadastrarRestaurante(restaurante, idAdmin);
-        return ResponseEntity.ok().build();
+    @PostMapping("/cadastrar/{idAdmin}")  //Depois para o cadastro fazer com que pegue pelo id do adm logado
+    public ResponseEntity<RestauranteResponseDTO> cadastrarRestaurante(@RequestBody RestauranteRequestDTO dto, @PathVariable Integer idAdmin) {
+        RestauranteResponseDTO response = restauranteService.cadastrarRestaurante(dto, idAdmin);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<Restaurante>> listarRestaurantes(){
+    public ResponseEntity<List<RestauranteResponseDTO>> listarRestaurantes(){
         return ResponseEntity.ok(restauranteService.listarTodos());
     }
 
-    @PutMapping 
-    public ResponseEntity<Void> atualizarRestaurantePorId(@RequestParam int id, @RequestBody Restaurante restaurante) {
-        restauranteService.atualizarPorId(id, restaurante);
-        return ResponseEntity.ok().build();
+    @PutMapping("/{id}")
+    public ResponseEntity<RestauranteResponseDTO> atualizarRestaurantePorId(@RequestParam int id, @RequestBody RestauranteRequestDTO dto) {
+        RestauranteResponseDTO response = restauranteService.atualizarPorId(id, dto);
+        return ResponseEntity.ok(response);
     }
 
 

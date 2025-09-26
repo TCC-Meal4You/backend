@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import java.util.List;
 
 @Getter
 @Setter
@@ -42,11 +41,8 @@ public class Restaurante {
 
     private boolean aberto;
 
-    @NotBlank
     @OneToOne
     @JoinColumn(name = "id_admin", referencedColumnName = "id_admin", nullable = false)
     private AdmRestaurante admin;
 
-    @OneToMany(mappedBy = "restaurante", cascade = CascadeType.ALL)
-    private List<Refeicao> refeicoes;
 }

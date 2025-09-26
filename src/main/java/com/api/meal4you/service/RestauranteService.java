@@ -1,7 +1,10 @@
 package com.api.meal4you.service;
 
+import com.api.meal4you.dto.RestauranteRequestDTO;
+import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Restaurante;
+import com.api.meal4you.mapper.RestauranteMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 
@@ -9,6 +12,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,54 +25,60 @@ public class RestauranteService {
     private final RestauranteRepository restauranteRepository;
     private final AdmRestauranteRepository admRestauranteRepository;
 
-    public void cadastrarRestaurante(Restaurante restaurante, Integer idAdmin) {
+    //Depois para o cadastro fazer com que pegue pelo id do adm logado
+    public RestauranteResponseDTO cadastrarRestaurante(RestauranteRequestDTO dto, Integer idAdmin) {
         AdmRestaurante adminExistente = admRestauranteRepository.findById(idAdmin)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin não encontrado"));
 
         boolean existe = restauranteRepository.findByNomeAndLocalizacao(
-                restaurante.getNome(), restaurante.getLocalizacao()).isPresent();
+                dto.getNome(), dto.getLocalizacao()).isPresent();
 
         if (existe) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Já existe um restaurante com esse nome e localização");
         }
 
-        restaurante.setAdmin(adminExistente);
+        Restaurante restaurante = RestauranteMapper.toEntity(dto, adminExistente);
         restauranteRepository.saveAndFlush(restaurante);
+
+        return RestauranteMapper.toResponse(restaurante);
     }
 
-    public List<Restaurante> listarTodos() {
-        return restauranteRepository.findAll();
+    public List<RestauranteResponseDTO> listarTodos() {
+        return restauranteRepository.findAll()
+            .stream()
+            .map(RestauranteMapper::toResponse)
+            .collect(Collectors.toList());
     }
 
     @Transactional
-    public void atualizarPorId(int id, Restaurante restaurante) {
+    public RestauranteResponseDTO atualizarPorId(int id, RestauranteRequestDTO dto) {
         Restaurante restauranteEntity = restauranteRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante não encontrado"));
 
         boolean alterado = false;
 
-        if (restaurante.getNome() != null && !restaurante.getNome().isBlank()
-                && !restaurante.getNome().equals(restauranteEntity.getNome())) {
-            restauranteEntity.setNome(restaurante.getNome());
+        if (dto.getNome() != null && !dto.getNome().isBlank()
+                && !dto.getNome().equals(restauranteEntity.getNome())) {
+            restauranteEntity.setNome(dto.getNome());
             alterado = true;
         }
 
-        if (restaurante.getLocalizacao() != null && !restaurante.getLocalizacao().isBlank()
-                && !restaurante.getLocalizacao().equals(restauranteEntity.getLocalizacao())) {
-            restauranteEntity.setLocalizacao(restaurante.getLocalizacao());
+        if (dto.getLocalizacao() != null && !dto.getLocalizacao().isBlank()
+                && !dto.getLocalizacao().equals(restauranteEntity.getLocalizacao())) {
+            restauranteEntity.setLocalizacao(dto.getLocalizacao());
             alterado = true;
         }
 
-        if (restaurante.getTipo_comida() != null && !restaurante.getTipo_comida().isBlank()
-                && !restaurante.getTipo_comida().equals(restauranteEntity.getTipo_comida())) {
-            restauranteEntity.setTipo_comida(restaurante.getTipo_comida());
+        if (dto.getTipo_comida() != null && !dto.getTipo_comida().isBlank()
+                && !dto.getTipo_comida().equals(restauranteEntity.getTipo_comida())) {
+            restauranteEntity.setTipo_comida(dto.getTipo_comida());
             alterado = true;
         }
 
-        if (restauranteEntity.isAberto() != restaurante.isAberto()) {
-            restauranteEntity.setAberto(restaurante.isAberto());
+        if (restauranteEntity.isAberto() != dto.isAberto()) {
+            restauranteEntity.setAberto(dto.isAberto());
             alterado = true;
         }
 
@@ -77,6 +87,7 @@ public class RestauranteService {
         }
 
         restauranteRepository.save(restauranteEntity);
+        return RestauranteMapper.toResponse(restauranteEntity);
     }
 
     public void deletarRestaurante(String nome, String localizacao) {
