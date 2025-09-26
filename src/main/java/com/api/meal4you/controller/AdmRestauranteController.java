@@ -19,7 +19,6 @@ public class AdmRestauranteController {
 
     @PostMapping
     public ResponseEntity<AdmRestauranteResponseDTO> cadastrarAdm(@RequestBody AdmRestauranteRequestDTO dto) {
-
         AdmRestauranteResponseDTO response = admRestauranteService.cadastrarAdm(dto);
         return ResponseEntity.ok(response);
     }
