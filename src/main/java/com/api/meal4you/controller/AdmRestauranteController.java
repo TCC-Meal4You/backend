@@ -2,7 +2,6 @@ package com.api.meal4you.controller;
 
 import com.api.meal4you.dto.AdmRestauranteRequestDTO;
 import com.api.meal4you.dto.AdmRestauranteResponseDTO;
-import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.service.AdmRestauranteService;
 import lombok.RequiredArgsConstructor;
 

@@ -8,5 +8,7 @@ import lombok.*;
 @Builder
 public class AdmRestauranteResponseDTO {
     private String email;
+
     private String nome;
+    
 }
