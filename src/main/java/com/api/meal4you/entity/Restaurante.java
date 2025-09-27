@@ -41,7 +41,7 @@ public class Restaurante {
 
     private boolean aberto;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_admin", referencedColumnName = "id_admin", nullable = false)
     private AdmRestaurante admin;
 

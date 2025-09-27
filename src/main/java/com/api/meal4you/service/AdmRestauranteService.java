@@ -40,27 +40,27 @@ public class AdmRestauranteService {
 
     @Transactional
     public AdmRestauranteResponseDTO atualizarPorId(int id, AdmRestauranteRequestDTO dto) {
-        AdmRestaurante admEntity = admRepository.findById(id)
+        AdmRestaurante adm = admRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Administrador de restaurante não encontrado"));
 
         boolean alterado = false;
 
         if (dto.getNome() != null && !dto.getNome().isBlank()
-                && !dto.getNome().equals(admEntity.getNome())) {
-            admEntity.setNome(dto.getNome());
+                && !dto.getNome().equals(adm.getNome())) {
+            adm.setNome(dto.getNome());
             alterado = true;
         }
 
         if (dto.getEmail() != null && !dto.getEmail().isBlank()
-                && !dto.getEmail().equals(admEntity.getEmail())) {
-            admEntity.setEmail(dto.getEmail());
+                && !dto.getEmail().equals(adm.getEmail())) {
+            adm.setEmail(dto.getEmail());
             alterado = true;
         }
 
         if (dto.getSenha() != null && !dto.getSenha().isBlank()
-                && !encoder.matches(dto.getSenha(), admEntity.getSenha())) {
-            admEntity.setSenha(encoder.encode(dto.getSenha()));
+                && !encoder.matches(dto.getSenha(), adm.getSenha())) {
+            adm.setSenha(encoder.encode(dto.getSenha()));
             alterado = true;
         }
 
@@ -68,8 +68,8 @@ public class AdmRestauranteService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nenhuma alteração detectada.");
         }
 
-        admRepository.save(admEntity);
-        return AdmRestauranteMapper.toResponse(admEntity);
+        admRepository.save(adm);
+        return AdmRestauranteMapper.toResponse(adm);
     }
 
     public void deletarPorEmail(String email, String senha) {

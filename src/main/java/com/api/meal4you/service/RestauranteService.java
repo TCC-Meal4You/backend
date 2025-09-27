@@ -44,6 +44,7 @@ public class RestauranteService {
         return RestauranteMapper.toResponse(restaurante);
     }
 
+    @Transactional
     public List<RestauranteResponseDTO> listarTodos() {
         return restauranteRepository.findAll()
             .stream()
@@ -53,32 +54,32 @@ public class RestauranteService {
 
     @Transactional
     public RestauranteResponseDTO atualizarPorId(int id, RestauranteRequestDTO dto) {
-        Restaurante restauranteEntity = restauranteRepository.findById(id)
+        Restaurante restaurante = restauranteRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante não encontrado"));
 
         boolean alterado = false;
 
         if (dto.getNome() != null && !dto.getNome().isBlank()
-                && !dto.getNome().equals(restauranteEntity.getNome())) {
-            restauranteEntity.setNome(dto.getNome());
+                && !dto.getNome().equals(restaurante.getNome())) {
+            restaurante.setNome(dto.getNome());
             alterado = true;
         }
 
         if (dto.getLocalizacao() != null && !dto.getLocalizacao().isBlank()
-                && !dto.getLocalizacao().equals(restauranteEntity.getLocalizacao())) {
-            restauranteEntity.setLocalizacao(dto.getLocalizacao());
+                && !dto.getLocalizacao().equals(restaurante.getLocalizacao())) {
+            restaurante.setLocalizacao(dto.getLocalizacao());
             alterado = true;
         }
 
         if (dto.getTipo_comida() != null && !dto.getTipo_comida().isBlank()
-                && !dto.getTipo_comida().equals(restauranteEntity.getTipo_comida())) {
-            restauranteEntity.setTipo_comida(dto.getTipo_comida());
+                && !dto.getTipo_comida().equals(restaurante.getTipo_comida())) {
+            restaurante.setTipo_comida(dto.getTipo_comida());
             alterado = true;
         }
 
-        if (restauranteEntity.isAberto() != dto.isAberto()) {
-            restauranteEntity.setAberto(dto.isAberto());
+        if (restaurante.isAberto() != dto.isAberto()) {
+            restaurante.setAberto(dto.isAberto());
             alterado = true;
         }
 
@@ -86,8 +87,8 @@ public class RestauranteService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nenhuma alteração detectada.");
         }
 
-        restauranteRepository.save(restauranteEntity);
-        return RestauranteMapper.toResponse(restauranteEntity);
+        restauranteRepository.save(restaurante);
+        return RestauranteMapper.toResponse(restaurante);
     }
 
     public void deletarRestaurante(String nome, String localizacao) {
