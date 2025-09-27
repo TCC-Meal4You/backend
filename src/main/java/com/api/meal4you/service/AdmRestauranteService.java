@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -20,10 +21,14 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class AdmRestauranteService {
     private final AdmRestauranteRepository admRepository;
+    private final PasswordEncoder encoder;
 
     public AdmRestauranteResponseDTO cadastrarAdm(AdmRestauranteRequestDTO dto) {
         AdmRestaurante admRestaurante = AdmRestauranteMapper.toEntity(dto);
-        admRepository.saveAndFlush(admRestaurante); // Lembra de cripitografar senha
+        
+        admRestaurante.setSenha(encoder.encode(admRestaurante.getSenha()));
+
+        admRepository.saveAndFlush(admRestaurante);
         return AdmRestauranteMapper.toResponse(admRestaurante);
     }
 
@@ -54,8 +59,8 @@ public class AdmRestauranteService {
         }
 
         if (dto.getSenha() != null && !dto.getSenha().isBlank()
-                && !dto.getSenha().equals(admEntity.getSenha())) {
-            admEntity.setSenha(dto.getSenha()); // Lembrar de criptografar senha!
+                && !encoder.matches(dto.getSenha(), admEntity.getSenha())) {
+            admEntity.setSenha(encoder.encode(dto.getSenha()));
             alterado = true;
         }
 
@@ -67,10 +72,10 @@ public class AdmRestauranteService {
         return AdmRestauranteMapper.toResponse(admEntity);
     }
 
-    public void deletarPorEmail(String email, String senha) { //Lembra
+    public void deletarPorEmail(String email, String senha) {
         AdmRestaurante admRestaurante = admRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
-        if (!admRestaurante.getSenha().equals(senha)) {
+        if (!encoder.matches(senha, admRestaurante.getSenha())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
         }
         admRepository.deleteByEmail(email);
@@ -81,7 +86,7 @@ public class AdmRestauranteService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
 
-        if (!admRestaurante.getSenha().equals(senha)) {
+        if (!encoder.matches(senha, admRestaurante.getSenha())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta");
         }
 
