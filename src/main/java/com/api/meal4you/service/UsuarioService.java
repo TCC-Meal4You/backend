@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -17,11 +18,13 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder encoder;
 
     public UsuarioResponseDTO cadastrarUsuario(UsuarioRequestDTO dto) {
         Usuario usuario = UsuarioMapper.toEntity(dto);
 
-        //aplicar criptografia da senha aqui
+        usuario.setSenha(encoder.encode(usuario.getSenha()));
+
         usuarioRepository.saveAndFlush(usuario);
         return UsuarioMapper.toResponse(usuario);
     }
@@ -36,7 +39,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
 
-        if (!usuario.getSenha().equals(senha)) {
+        if (!encoder.matches(senha, usuario.getSenha())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
         }
         usuarioRepository.deleteByEmail(email);
@@ -62,8 +65,8 @@ public class UsuarioService {
         }
 
         if (dto.getSenha() != null && !dto.getSenha().isBlank()
-                && !dto.getSenha().equals(usuarioEntity.getSenha())) {
-            usuarioEntity.setSenha(dto.getSenha()); //criptografar
+                && !encoder.matches(dto.getSenha(), usuarioEntity.getSenha())) {
+            usuarioEntity.setSenha(encoder.encode(dto.getSenha())); 
             alterado = true;
         }
 
@@ -79,7 +82,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
 
-        if (!usuario.getSenha().equals(senha)) {
+        if (!encoder.matches(senha, usuario.getSenha())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreto");
         }
 

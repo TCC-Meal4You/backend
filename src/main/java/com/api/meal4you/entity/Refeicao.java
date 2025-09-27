@@ -18,7 +18,7 @@ public class Refeicao {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id_refeicao;
 
     @NotBlank
     @Size(min = 3,max = 150)
