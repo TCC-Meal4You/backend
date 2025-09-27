@@ -17,13 +17,14 @@ public class RestauranteMapper {
     }
 
     public static RestauranteResponseDTO toResponse(Restaurante restaurante) {
+        AdmRestaurante admin = restaurante.getAdmin();
         return RestauranteResponseDTO.builder()
             .nome(restaurante.getNome())
             .localizacao(restaurante.getLocalizacao())
             .tipo_comida(restaurante.getTipo_comida())
             .aberto(restaurante.isAberto())
-            .emailAdmin(restaurante.getAdmin().getEmail())
-            .nomeAdmin(restaurante.getAdmin().getNome())
+            .emailAdmin(admin.getEmail())
+            .nomeAdmin(admin.getNome())
             .build();
     }
 }

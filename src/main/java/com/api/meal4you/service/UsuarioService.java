@@ -47,26 +47,26 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponseDTO atualizarUsuarioPorId(int id, UsuarioRequestDTO dto) {
-        Usuario usuarioEntity = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
         boolean alterado = false;
 
         if (dto.getNome() != null && !dto.getNome().isBlank()
-                && !dto.getNome().equals(usuarioEntity.getNome())) {
-            usuarioEntity.setNome(dto.getNome());
+                && !dto.getNome().equals(usuario.getNome())) {
+            usuario.setNome(dto.getNome());
             alterado = true;
         }
 
         if (dto.getEmail() != null && !dto.getEmail().isBlank()
-                && !dto.getEmail().equals(usuarioEntity.getEmail())) {
-            usuarioEntity.setEmail(dto.getEmail());
+                && !dto.getEmail().equals(usuario.getEmail())) {
+            usuario.setEmail(dto.getEmail());
             alterado = true;
         }
 
         if (dto.getSenha() != null && !dto.getSenha().isBlank()
-                && !encoder.matches(dto.getSenha(), usuarioEntity.getSenha())) {
-            usuarioEntity.setSenha(encoder.encode(dto.getSenha())); 
+                && !encoder.matches(dto.getSenha(), usuario.getSenha())) {
+            usuario.setSenha(encoder.encode(dto.getSenha())); 
             alterado = true;
         }
 
@@ -74,8 +74,8 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nenhuma alteração detectada.");
         }
 
-        usuarioRepository.save(usuarioEntity);
-        return UsuarioMapper.toResponse(usuarioEntity);
+        usuarioRepository.save(usuario);
+        return UsuarioMapper.toResponse(usuario);
     }
 
     public Map<String, Object> fazerLogin(String email, String senha) {
