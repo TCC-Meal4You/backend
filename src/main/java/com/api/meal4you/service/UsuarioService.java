@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -17,11 +18,13 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder encoder;
 
     public UsuarioResponseDTO cadastrarUsuario(UsuarioRequestDTO dto) {
         Usuario usuario = UsuarioMapper.toEntity(dto);
 
-        //aplicar criptografia da senha aqui
+        usuario.setSenha(encoder.encode(usuario.getSenha()));
+
         usuarioRepository.saveAndFlush(usuario);
         return UsuarioMapper.toResponse(usuario);
     }
@@ -36,7 +39,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
 
-        if (!usuario.getSenha().equals(senha)) {
+        if (!encoder.matches(senha, usuario.getSenha())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
         }
         usuarioRepository.deleteByEmail(email);
@@ -44,26 +47,26 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponseDTO atualizarUsuarioPorId(int id, UsuarioRequestDTO dto) {
-        Usuario usuarioEntity = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
         boolean alterado = false;
 
         if (dto.getNome() != null && !dto.getNome().isBlank()
-                && !dto.getNome().equals(usuarioEntity.getNome())) {
-            usuarioEntity.setNome(dto.getNome());
+                && !dto.getNome().equals(usuario.getNome())) {
+            usuario.setNome(dto.getNome());
             alterado = true;
         }
 
         if (dto.getEmail() != null && !dto.getEmail().isBlank()
-                && !dto.getEmail().equals(usuarioEntity.getEmail())) {
-            usuarioEntity.setEmail(dto.getEmail());
+                && !dto.getEmail().equals(usuario.getEmail())) {
+            usuario.setEmail(dto.getEmail());
             alterado = true;
         }
 
         if (dto.getSenha() != null && !dto.getSenha().isBlank()
-                && !dto.getSenha().equals(usuarioEntity.getSenha())) {
-            usuarioEntity.setSenha(dto.getSenha()); //criptografar
+                && !encoder.matches(dto.getSenha(), usuario.getSenha())) {
+            usuario.setSenha(encoder.encode(dto.getSenha())); 
             alterado = true;
         }
 
@@ -71,15 +74,15 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nenhuma alteração detectada.");
         }
 
-        usuarioRepository.save(usuarioEntity);
-        return UsuarioMapper.toResponse(usuarioEntity);
+        usuarioRepository.save(usuario);
+        return UsuarioMapper.toResponse(usuario);
     }
 
     public Map<String, Object> fazerLogin(String email, String senha) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
 
-        if (!usuario.getSenha().equals(senha)) {
+        if (!encoder.matches(senha, usuario.getSenha())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreto");
         }
 
