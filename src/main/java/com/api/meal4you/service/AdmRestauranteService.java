@@ -1,6 +1,9 @@
 package com.api.meal4you.service;
 
+import com.api.meal4you.dto.AdmRestauranteRequestDTO;
+import com.api.meal4you.dto.AdmRestauranteResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
+import com.api.meal4you.mapper.AdmRestauranteMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 
 import jakarta.transaction.Transactional;
@@ -10,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -17,39 +21,46 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class AdmRestauranteService {
     private final AdmRestauranteRepository admRepository;
+    private final PasswordEncoder encoder;
 
-    public void cadastararAdm(AdmRestaurante admRestaurante) {
-        admRepository.saveAndFlush(admRestaurante); // Lembra de cripitografar senha
+    public AdmRestauranteResponseDTO cadastrarAdm(AdmRestauranteRequestDTO dto) {
+        AdmRestaurante admRestaurante = AdmRestauranteMapper.toEntity(dto);
+        
+        admRestaurante.setSenha(encoder.encode(admRestaurante.getSenha()));
+
+        admRepository.saveAndFlush(admRestaurante);
+        return AdmRestauranteMapper.toResponse(admRestaurante);
     }
 
-    public AdmRestaurante buscarPorEmail(String email) {
-        return admRepository.findByEmail(email)
+    public AdmRestauranteResponseDTO buscarPorEmail(String email) {
+        AdmRestaurante adm = admRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
+        return AdmRestauranteMapper.toResponse(adm);
     }
 
     @Transactional
-    public void atualizarPorId(int id, AdmRestaurante admRestaurante) {
-        AdmRestaurante admEntity = admRepository.findById(id)
+    public AdmRestauranteResponseDTO atualizarPorId(int id, AdmRestauranteRequestDTO dto) {
+        AdmRestaurante adm = admRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Administrador de restaurante não encontrado"));
 
         boolean alterado = false;
 
-        if (admRestaurante.getNome() != null && !admRestaurante.getNome().isBlank()
-                && !admRestaurante.getNome().equals(admEntity.getNome())) {
-            admEntity.setNome(admRestaurante.getNome());
+        if (dto.getNome() != null && !dto.getNome().isBlank()
+                && !dto.getNome().equals(adm.getNome())) {
+            adm.setNome(dto.getNome());
             alterado = true;
         }
 
-        if (admRestaurante.getEmail() != null && !admRestaurante.getEmail().isBlank()
-                && !admRestaurante.getEmail().equals(admEntity.getEmail())) {
-            admEntity.setEmail(admRestaurante.getEmail());
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()
+                && !dto.getEmail().equals(adm.getEmail())) {
+            adm.setEmail(dto.getEmail());
             alterado = true;
         }
 
-        if (admRestaurante.getSenha() != null && !admRestaurante.getSenha().isBlank()
-                && !admRestaurante.getSenha().equals(admEntity.getSenha())) {
-            admEntity.setSenha(admRestaurante.getSenha()); // Lembrar de criptografar senha!
+        if (dto.getSenha() != null && !dto.getSenha().isBlank()
+                && !encoder.matches(dto.getSenha(), adm.getSenha())) {
+            adm.setSenha(encoder.encode(dto.getSenha()));
             alterado = true;
         }
 
@@ -57,13 +68,14 @@ public class AdmRestauranteService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nenhuma alteração detectada.");
         }
 
-        admRepository.save(admEntity);
+        admRepository.save(adm);
+        return AdmRestauranteMapper.toResponse(adm);
     }
 
-    public void deletarPorEmail(String email, String senha) { //Lembra
+    public void deletarPorEmail(String email, String senha) {
         AdmRestaurante admRestaurante = admRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
-        if (!admRestaurante.getSenha().equals(senha)) {
+        if (!encoder.matches(senha, admRestaurante.getSenha())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
         }
         admRepository.deleteByEmail(email);
@@ -74,7 +86,7 @@ public class AdmRestauranteService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
 
-        if (!admRestaurante.getSenha().equals(senha)) {
+        if (!encoder.matches(senha, admRestaurante.getSenha())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta");
         }
 

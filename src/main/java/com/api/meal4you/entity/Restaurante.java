@@ -1,7 +1,6 @@
 package com.api.meal4you.entity;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -42,8 +41,8 @@ public class Restaurante {
 
     private boolean aberto;
 
-    @NotNull
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_admin", referencedColumnName = "id_admin", nullable = false)
     private AdmRestaurante admin;
+
 }
