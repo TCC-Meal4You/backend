@@ -5,11 +5,15 @@ import com.api.meal4you.dto.UsuarioResponseDTO;
 import com.api.meal4you.entity.Usuario;
 import com.api.meal4you.mapper.UsuarioMapper;
 import com.api.meal4you.repository.UsuarioRepository;
+import com.api.meal4you.security.JwtUtil;
+import com.api.meal4you.security.TokenStore;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,6 +23,19 @@ import org.springframework.web.server.ResponseStatusException;
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder encoder;
+    private final JwtUtil jwtUtil;
+    private final TokenStore tokenStore;
+
+    public String getUsuarioLogadoEmail() {
+        return (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
+    private void validarUsuarioLogado(String email) {
+        String emailLogado = getUsuarioLogadoEmail();
+        if (!email.equals(emailLogado)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não pode acessar outro usuário");
+        }
+    }
 
     public UsuarioResponseDTO cadastrarUsuario(UsuarioRequestDTO dto) {
         Usuario usuario = UsuarioMapper.toEntity(dto);
@@ -30,12 +47,16 @@ public class UsuarioService {
     }
 
     public UsuarioResponseDTO buscarUsuarioPorEmail(String email) {
+        validarUsuarioLogado(email);
+
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
         return UsuarioMapper.toResponse(usuario);
     }
 
     public void deletarUsuarioPorEmail(String email, String senha) {
+        validarUsuarioLogado(email);
+        
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
 
@@ -49,6 +70,8 @@ public class UsuarioService {
     public UsuarioResponseDTO atualizarUsuarioPorId(int id, UsuarioRequestDTO dto) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        validarUsuarioLogado(usuario.getEmail());
 
         boolean alterado = false;
 
@@ -66,7 +89,7 @@ public class UsuarioService {
 
         if (dto.getSenha() != null && !dto.getSenha().isBlank()
                 && !encoder.matches(dto.getSenha(), usuario.getSenha())) {
-            usuario.setSenha(encoder.encode(dto.getSenha())); 
+            usuario.setSenha(encoder.encode(dto.getSenha()));
             alterado = true;
         }
 
@@ -86,11 +109,21 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreto");
         }
 
+        String token = jwtUtil.gerarToken(usuario.getEmail(), "USUARIO");
+        tokenStore.adicionarToken(token);
+
         Map<String, Object> response = new HashMap<>();
         response.put("id", usuario.getId_usuario());
         response.put("nome", usuario.getNome());
         response.put("email", usuario.getEmail());
-
+        response.put("token", token);
         return response;
+    }
+
+    public void logout(String header) {
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
+            tokenStore.removerToken(token);
+        }
     }
 }
