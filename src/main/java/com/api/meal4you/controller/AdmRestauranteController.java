@@ -17,26 +17,27 @@ public class AdmRestauranteController {
 
     private final AdmRestauranteService admRestauranteService;
 
-    @PostMapping
+    @PostMapping("/cadastrar")
     public ResponseEntity<AdmRestauranteResponseDTO> cadastrarAdm(@RequestBody AdmRestauranteRequestDTO dto) {
         AdmRestauranteResponseDTO response = admRestauranteService.cadastrarAdm(dto);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/email")
+    @GetMapping("/buscar/email")
     public ResponseEntity<AdmRestauranteResponseDTO> buscarPorEmail(@RequestParam String email) {
         AdmRestauranteResponseDTO response = admRestauranteService.buscarPorEmail(email);
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<AdmRestauranteResponseDTO> atualizarPorId(@PathVariable int id, @RequestBody AdmRestauranteRequestDTO dto) {
+    @PutMapping("/atualizar/{id}")
+    public ResponseEntity<AdmRestauranteResponseDTO> atualizarPorId(@PathVariable int id,
+            @RequestBody AdmRestauranteRequestDTO dto) {
         AdmRestauranteResponseDTO response = admRestauranteService.atualizarPorId(id, dto);
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/email")
-    public ResponseEntity<Void> deletarAdmPorEmail(@RequestParam String email, String senha) {
+    @DeleteMapping("/deletar/email")
+    public ResponseEntity<Void> deletarAdmPorEmail(@RequestParam String email, @RequestParam String senha) {
         admRestauranteService.deletarPorEmail(email, senha);
         return ResponseEntity.ok().build();
     }
@@ -48,4 +49,15 @@ public class AdmRestauranteController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String header) {
+        admRestauranteService.logout(header);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/logout-global")
+    public ResponseEntity<Void> logoutGlobal() {
+        admRestauranteService.logoutGlobal();
+        return ResponseEntity.ok().build();
+    }
 }

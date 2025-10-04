@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/usuario")
@@ -17,7 +19,7 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    @PostMapping
+    @PostMapping("/cadastrar")
     public ResponseEntity<UsuarioResponseDTO> cadastrarUsuario(
             @RequestBody UsuarioRequestDTO dto) {
 
@@ -31,25 +33,34 @@ public class UsuarioController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping
-    public ResponseEntity<UsuarioResponseDTO> atualizarUsuarioPorId(@RequestParam int id, @RequestBody UsuarioRequestDTO dto) {
+    @PutMapping("/atualizar")
+    public ResponseEntity<UsuarioResponseDTO> atualizarUsuarioPorId(@RequestParam int id,
+            @RequestBody UsuarioRequestDTO dto) {
         UsuarioResponseDTO response = usuarioService.atualizarUsuarioPorId(id, dto);
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> deletarUsuarioPorEmail(
-            @RequestParam String email,
-            @RequestParam String senha) {
-
+    @DeleteMapping("/deletar")
+    public ResponseEntity<Void> deletarUsuarioPorEmail(@RequestParam String email, @RequestParam String senha) {
         usuarioService.deletarUsuarioPorEmail(email, senha);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody UsuarioRequestDTO dto) {
-
         Map<String, Object> response = usuarioService.fazerLogin(dto.getEmail(), dto.getSenha());
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String header) {
+        usuarioService.logout(header); // Passa o header direto
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/logout-global")
+    public ResponseEntity<Void> logoutGlobal() {
+        usuarioService.logoutGlobal();
+        return ResponseEntity.ok().build();
     }
 }
