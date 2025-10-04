@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/usuario")
@@ -53,6 +55,12 @@ public class UsuarioController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader("Authorization") String header) {
         usuarioService.logout(header); // Passa o header direto
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/logout-global")
+    public ResponseEntity<Void> logoutGlobal() {
+        usuarioService.logoutGlobal();
         return ResponseEntity.ok().build();
     }
 }

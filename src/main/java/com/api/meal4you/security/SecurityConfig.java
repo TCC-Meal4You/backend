@@ -30,16 +30,15 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Swagger
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // Endpoints de login e cadastro
+
                         .requestMatchers("/usuario/login", "/usuario/cadastrar").permitAll()
                         .requestMatchers("/admin/login", "/admin/cadastrar").permitAll()
-                        // restrição por role
+
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/restaurante/**").hasRole("ADMIN") //só admin pode mexer
+                        .requestMatchers("/restaurante/**").hasRole("ADMIN")
                         .requestMatchers("/usuario/**").hasRole("USUARIO")
-                        // qualquer outro endpoint precisa de autenticação
+
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -15,25 +15,42 @@ public class TokenStore {
 
     private final JwtUtil jwtUtil;
 
-    private final Map<String, Date> validTokens = new ConcurrentHashMap<>();
+    private final Map<String, Date> tokenParaExpiracao = new ConcurrentHashMap<>();
+    private final Map<String, String> tokenParaUsuario = new ConcurrentHashMap<>();
 
-    public void adicionarToken(String token) {
+
+    public void salvarToken(String token) {
         Date expiration = jwtUtil.getExpiracao(token);
-        validTokens.put(token, expiration);
+        String email = jwtUtil.extrairEmail(token);
+        tokenParaExpiracao.put(token, expiration);
+        tokenParaUsuario.put(token, email);
     }
 
     public void removerToken(String token) {
-        validTokens.remove(token);
+        tokenParaExpiracao.remove(token);
+        tokenParaUsuario.remove(token);
     }
 
-    public boolean contemToken(String token) {
-        Date exp = validTokens.get(token);
+    public boolean tokenEhRegistradoAtivo(String token) {
+        Date exp = tokenParaExpiracao.get(token);
         return exp != null && exp.after(new Date());
+    }
+
+     public void removerTodosTokensDoUsuario(String email) {
+        tokenParaUsuario.entrySet().removeIf(entry -> entry.getValue().equals(email));
+        tokenParaExpiracao.entrySet().removeIf(entry -> {
+            try {
+                return jwtUtil.extrairEmail(entry.getKey()).equals(email);
+            } catch (Exception e) {
+                return true;
+            }
+        });
     }
 
     @Scheduled(fixedRate = 1000 * 60 * 60 * 24 * 365)
     public void removerTokensExpirados() {
         Date now = new Date();
-        validTokens.entrySet().removeIf(entry -> entry.getValue().before(now));
+        tokenParaExpiracao.entrySet().removeIf(entry -> entry.getValue().before(now));
+        tokenParaUsuario.keySet().removeIf(token -> !tokenParaExpiracao.containsKey(token));
     }
 }

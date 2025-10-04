@@ -56,13 +56,15 @@ public class UsuarioService {
 
     public void deletarUsuarioPorEmail(String email, String senha) {
         validarUsuarioLogado(email);
-        
+
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
 
         if (!encoder.matches(senha, usuario.getSenha())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
         }
+
+        tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
         usuarioRepository.deleteByEmail(email);
     }
 
@@ -83,12 +85,14 @@ public class UsuarioService {
 
         if (dto.getEmail() != null && !dto.getEmail().isBlank()
                 && !dto.getEmail().equals(usuario.getEmail())) {
+            tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
             usuario.setEmail(dto.getEmail());
             alterado = true;
         }
 
         if (dto.getSenha() != null && !dto.getSenha().isBlank()
                 && !encoder.matches(dto.getSenha(), usuario.getSenha())) {
+            tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
             usuario.setSenha(encoder.encode(dto.getSenha()));
             alterado = true;
         }
@@ -110,7 +114,7 @@ public class UsuarioService {
         }
 
         String token = jwtUtil.gerarToken(usuario.getEmail(), "USUARIO");
-        tokenStore.adicionarToken(token);
+        tokenStore.salvarToken(token);
 
         Map<String, Object> response = new HashMap<>();
         response.put("id", usuario.getId_usuario());
@@ -125,5 +129,10 @@ public class UsuarioService {
             String token = header.substring(7);
             tokenStore.removerToken(token);
         }
+    }
+
+    public void logoutGlobal(){
+        String emailLogado = getUsuarioLogadoEmail();
+        tokenStore.removerTodosTokensDoUsuario(emailLogado);
     }
 }
