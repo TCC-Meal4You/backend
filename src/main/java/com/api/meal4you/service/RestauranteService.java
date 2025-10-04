@@ -24,10 +24,18 @@ public class RestauranteService {
 
     private final RestauranteRepository restauranteRepository;
     private final AdmRestauranteRepository admRestauranteRepository;
+    private final AdmRestauranteService admRestauranteService;
 
-    //Depois para o cadastro fazer com que pegue pelo id do adm logado
-    public RestauranteResponseDTO cadastrarRestaurante(RestauranteRequestDTO dto, Integer idAdmin) {
-        AdmRestaurante adminExistente = admRestauranteRepository.findById(idAdmin)
+    private void verificarRestauranteDoAdmLogado(Restaurante restaurante, String emailAdmLogado) {
+        if (!restaurante.getAdmin().getEmail().equals(emailAdmLogado)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Você não pode acessar restaurante de outro administrador");
+        }
+    }
+
+    public RestauranteResponseDTO cadastrarRestaurante(RestauranteRequestDTO dto) {
+        String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
+        AdmRestaurante adminExistente = admRestauranteRepository.findByEmail(emailAdmLogado)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin não encontrado"));
 
         boolean existe = restauranteRepository.findByNomeAndLocalizacao(
@@ -47,16 +55,19 @@ public class RestauranteService {
     @Transactional
     public List<RestauranteResponseDTO> listarTodos() {
         return restauranteRepository.findAll()
-            .stream()
-            .map(RestauranteMapper::toResponse)
-            .collect(Collectors.toList());
+                .stream()
+                .map(RestauranteMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public RestauranteResponseDTO atualizarPorId(int id, RestauranteRequestDTO dto) {
+    public RestauranteResponseDTO atualizarPorAdmLogado(int id, RestauranteRequestDTO dto) {
         Restaurante restaurante = restauranteRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante não encontrado"));
+
+        String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
+        verificarRestauranteDoAdmLogado(restaurante, emailAdmLogado);
 
         boolean alterado = false;
 
@@ -92,11 +103,15 @@ public class RestauranteService {
     }
 
     public void deletarRestaurante(String nome, String localizacao) {
+        String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
+
         Restaurante restaurante = restauranteRepository
                 .findByNomeAndLocalizacao(nome, localizacao)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Não existe restaurante com nome '" + nome + "' e localização '" + localizacao + "'"));
+
+        verificarRestauranteDoAdmLogado(restaurante, emailAdmLogado);
 
         restauranteRepository.delete(restaurante);
     }
