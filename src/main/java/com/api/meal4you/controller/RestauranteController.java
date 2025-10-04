@@ -18,9 +18,9 @@ public class RestauranteController {
 
     private final RestauranteService restauranteService;
 
-    @PostMapping("/cadastrar/{idAdmin}")  //Para cadastrar, pegar id do adm armazenado no front, ao fazer login (adm logado)
-    public ResponseEntity<RestauranteResponseDTO> cadastrarRestaurante(@RequestBody RestauranteRequestDTO dto, @PathVariable Integer idAdmin) {
-        RestauranteResponseDTO response = restauranteService.cadastrarRestaurante(dto, idAdmin);
+    @PostMapping("/cadastrar")
+    public ResponseEntity<RestauranteResponseDTO> cadastrarRestaurante(@RequestBody RestauranteRequestDTO dto) {
+        RestauranteResponseDTO response = restauranteService.cadastrarRestaurante(dto);
         return ResponseEntity.ok(response);
     }
 
@@ -30,11 +30,10 @@ public class RestauranteController {
     }
 
     @PutMapping("/atualizar/{id}")
-    public ResponseEntity<RestauranteResponseDTO> atualizarRestaurantePorId(@RequestParam int id, @RequestBody RestauranteRequestDTO dto) {
-        RestauranteResponseDTO response = restauranteService.atualizarPorId(id, dto);
+    public ResponseEntity<RestauranteResponseDTO> atualizarRestaurantePorId(@PathVariable int id, @RequestBody RestauranteRequestDTO dto) {
+        RestauranteResponseDTO response = restauranteService.atualizarPorAdmLogado(id, dto);
         return ResponseEntity.ok(response);
     }
-
 
     @DeleteMapping("/deletar")
     public ResponseEntity<Void> excluirRestaurantes(@RequestParam String nome, @RequestParam String localizacao) {
