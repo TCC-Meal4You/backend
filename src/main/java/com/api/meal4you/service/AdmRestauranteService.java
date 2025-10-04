@@ -61,7 +61,7 @@ public class AdmRestauranteService {
         AdmRestaurante adm = admRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Administrador de restaurante não encontrado"));
-        
+
         validarAdmLogado(adm.getEmail());
 
         boolean alterado = false;
@@ -74,12 +74,14 @@ public class AdmRestauranteService {
 
         if (dto.getEmail() != null && !dto.getEmail().isBlank()
                 && !dto.getEmail().equals(adm.getEmail())) {
+            tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
             adm.setEmail(dto.getEmail());
             alterado = true;
         }
 
         if (dto.getSenha() != null && !dto.getSenha().isBlank()
                 && !encoder.matches(dto.getSenha(), adm.getSenha())) {
+            tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
             adm.setSenha(encoder.encode(dto.getSenha()));
             alterado = true;
         }
@@ -100,6 +102,8 @@ public class AdmRestauranteService {
         if (!encoder.matches(senha, admRestaurante.getSenha())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
         }
+
+        tokenStore.removerTodosTokensDoUsuario(admRestaurante.getEmail());
         admRepository.deleteByEmail(email);
     }
 
@@ -113,7 +117,7 @@ public class AdmRestauranteService {
         }
 
         String token = jwtUtil.gerarToken(admRestaurante.getEmail(), "ADMIN");
-        tokenStore.adicionarToken(token);
+        tokenStore.salvarToken(token);
 
         Map<String, Object> response = new HashMap<>();
         response.put("id", admRestaurante.getId_admin());
@@ -129,5 +133,10 @@ public class AdmRestauranteService {
             String token = header.substring(7);
             tokenStore.removerToken(token);
         }
+    }
+
+    public void logoutGlobal() {
+        String emailLogado = getAdmLogadoEmail();
+        tokenStore.removerTodosTokensDoUsuario(emailLogado);
     }
 }

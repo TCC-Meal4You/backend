@@ -35,7 +35,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
 
-            if (jwtUtil.tokenValido(token) && tokenStore.contemToken(token)) {
+            if (jwtUtil.tokenValido(token) && tokenStore.tokenEhRegistradoAtivo(token)) {
                 String username = jwtUtil.extrairEmail(token);
                 String role = jwtUtil.extrairRole(token);
 
@@ -47,6 +47,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
+            } else {
+
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
         }
 

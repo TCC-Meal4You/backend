@@ -37,7 +37,7 @@ public class AdmRestauranteController {
     }
 
     @DeleteMapping("/deletar/email")
-    public ResponseEntity<Void> deletarAdmPorEmail(@RequestParam String email, String senha) {
+    public ResponseEntity<Void> deletarAdmPorEmail(@RequestParam String email, @RequestParam String senha) {
         admRestauranteService.deletarPorEmail(email, senha);
         return ResponseEntity.ok().build();
     }
@@ -52,6 +52,12 @@ public class AdmRestauranteController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader("Authorization") String header) {
         admRestauranteService.logout(header);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/logout-global")
+    public ResponseEntity<Void> logoutGlobal() {
+        admRestauranteService.logoutGlobal();
         return ResponseEntity.ok().build();
     }
 }
