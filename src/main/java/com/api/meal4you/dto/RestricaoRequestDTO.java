@@ -1,13 +1,14 @@
 package com.api.meal4you.dto;
 
-import lombok.*;;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RestricaoDTO {
+
+public class RestricaoRequestDTO {
     private boolean comGluten;
     private boolean comLactose;
     private boolean comAcucar;
