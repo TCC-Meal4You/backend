@@ -14,5 +14,5 @@ public class IngredienteResponseDTO {
 
     private String nomeAdmin;
 
-    private RestricaoDTO restricao;
+    private RestricaoResponseDTO restricao;
 }

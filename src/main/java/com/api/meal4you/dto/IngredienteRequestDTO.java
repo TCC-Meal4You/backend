@@ -10,5 +10,5 @@ import lombok.*;
 public class IngredienteRequestDTO {
     private String nome;
     
-    private RestricaoDTO restricao;
+    private RestricaoRequestDTO  restricao;
 }
