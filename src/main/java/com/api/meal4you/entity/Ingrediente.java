@@ -32,7 +32,7 @@ import lombok.Setter;
 public class Ingrediente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id_ingrediente;
+    private int idIngrediente;
 
     @NotBlank
     @Size(min = 3, max = 150)

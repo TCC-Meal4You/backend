@@ -31,16 +31,17 @@ import lombok.Setter;
 public class Refeicao {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id_refeicao;
+    private int idRefeicao;
 
     @NotBlank
-    @Size(min = 3, max = 150)
+    @Size(min = 3, max = 120)
     @Column(length = 120)
     private String nome;
 
     @Column(columnDefinition = "TEXT")
     private String descricao;
 
+    @Size(min = 6, max = 100)
     @Column(length = 100)
     private String tipo;
 
