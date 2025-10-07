@@ -23,7 +23,7 @@ import lombok.Setter;
 
 public class Restricao {
     @Id
-    private int id_resticao;
+    private int idRestricao;
 
     @OneToOne
     @MapsId
@@ -31,74 +31,74 @@ public class Restricao {
     private Ingrediente ingrediente;
 
     @Column(name = "com_gluten", nullable = false)
-    private boolean com_gluten;
+    private boolean comGluten;
 
     @Column(name = "com_lactose", nullable = false)
-    private boolean com_lactose;
+    private boolean comLactose;
 
     @Column(name = "com_acucar", nullable = false)
-    private boolean com_acucar;
+    private boolean comAcucar;
 
     @Column(name = "com_ovos", nullable = false)
-    private boolean com_ovos;
+    private boolean comOvos;
 
     @Column(name = "com_soja", nullable = false)
-    private boolean com_soja;
+    private boolean comSoja;
 
     @Column(name = "com_nozes", nullable = false)
-    private boolean com_nozes;
+    private boolean comNozes;
 
     @Column(name = "com_amendoim", nullable = false)
-    private boolean com_amendoim;
+    private boolean comAmendoim;
 
     @Column(name = "com_frutos_do_mar", nullable = false)
-    private boolean com_frutos_do_mar;
+    private boolean comFrutosDoMar;
 
     @Column(name = "com_milho", nullable = false)
-    private boolean com_milho;
+    private boolean comMilho;
 
     @Column(name = "com_conservantes", nullable = false)
-    private boolean com_conservantes;
+    private boolean comConservantes;
 
     @Column(name = "com_corantes", nullable = false)
-    private boolean com_corantes;
+    private boolean comCorantes;
 
     @Column(name = "com_cafeina", nullable = false)
-    private boolean com_cafeina;
+    private boolean comCafeina;
 
     @Column(name = "com_alcool", nullable = false)
-    private boolean com_alcool;
+    private boolean comAlcool;
 
     @Column(name = "com_oleo_de_palma", nullable = false)
-    private boolean com_oleo_de_palma;
+    private boolean comOleoDePalma;
 
     @Column(name = "com_gordura_trans", nullable = false)
-    private boolean com_gordura_trans;
+    private boolean comGorduraTrans;
 
     @Column(name = "com_adocante_artificial", nullable = false)
-    private boolean com_adocante_artificial;
+    private boolean comAdocanteArtificial;
 
     @Column(name = "com_aromatizante_artificial", nullable = false)
-    private boolean com_aromatizante_artificial;
+    private boolean comAromatizanteArtificial;
 
     @Column(name = "com_trigo", nullable = false)
-    private boolean com_trigo;
+    private boolean comTrigo;
 
     @Column(name = "com_ingredientes_geneticamente_modificados", nullable = false)
-    private boolean com_ingredientes_geneticamente_modificados;
+    private boolean comIngredientesGeneticamenteModificados;
 
     @Column(name = "com_sal", nullable = false)
-    private boolean com_sal;
+    private boolean comSal;
 
     @Column(name = "com_pimenta", nullable = false)
-    private boolean com_pimenta;
+    private boolean comPimenta;
 
     @Column(name = "com_fibras", nullable = false)
-    private boolean com_fibras;
+    private boolean comFibras;
 
     @Column(name = "com_fosfato", nullable = false)
-    private boolean com_fosfato;
+    private boolean comFosfato;
 
     @Column(name = "com_fermento", nullable = false)
-    private boolean com_fermento;
+    private boolean comFermento;
 }
