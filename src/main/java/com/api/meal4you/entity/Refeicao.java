@@ -1,12 +1,24 @@
 package com.api.meal4you.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.util.List;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -14,14 +26,15 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-public class Refeicao {
+@Table(name = "refeicao")
 
+public class Refeicao {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id_refeicao;
 
     @NotBlank
-    @Size(min = 3,max = 150)
+    @Size(min = 3, max = 150)
     @Column(length = 120)
     private String nome;
 
@@ -38,11 +51,6 @@ public class Refeicao {
     @JoinColumn(name = "id_restaurante", nullable = false)
     private Restaurante restaurante;
 
-    @ManyToMany
-    @JoinTable(
-            name = "refeicao_ingrediente",
-            joinColumns = @JoinColumn(name = "id_refeicao"),
-            inverseJoinColumns = @JoinColumn(name = "id_ingrediente")
-    )
-    private List<Ingrediente> ingredientes;
+    @OneToMany(mappedBy = "refeicao")
+    private List<RefeicaoIngrediente> refeicaoIngredientes;
 }
