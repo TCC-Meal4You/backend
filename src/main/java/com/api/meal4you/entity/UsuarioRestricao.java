@@ -1,7 +1,5 @@
 package com.api.meal4you.entity;
 
-import java.io.Serializable;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -19,16 +17,16 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "refeicao_ingrediente")
-public class RefeicaoIngrediente implements Serializable {
+@Table(name = "usuario_restricao")
+public class UsuarioRestricao {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "id_refeicao")
-    private Refeicao refeicao;
-
+    @JoinColumn(name = "id_usuario", nullable = false)
+    private Usuario usuario;
+    
     @Id
     @ManyToOne
-    @JoinColumn(name = "id_ingrediente")
-    private Ingrediente ingrediente;
+    @JoinColumn(name = "id_restricao", nullable = false)
+    private Restricao restricao;
 }

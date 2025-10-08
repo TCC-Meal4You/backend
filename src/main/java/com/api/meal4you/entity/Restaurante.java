@@ -28,24 +28,24 @@ import lombok.Setter;
     name="restaurante",
     uniqueConstraints = @UniqueConstraint(columnNames ={"nome", "localizacao"})
 )
-
 public class Restaurante {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id_restaurante;
 
     @NotBlank
-    @Size(min = 3,max = 120)
+    @Size(min = 3, max = 120)
     @Column(length = 120)
     private String nome;
 
     @NotBlank
-    @Size(min = 4,max = 200)
+    @Size(min = 4, max = 200)
     @Column(length = 200)
     private String localizacao;
 
     @NotBlank
-    @Size(min = 3,max = 100)
+    @Size(min = 3, max = 100)
     @Column(length = 100)
     private String tipo_comida;
 

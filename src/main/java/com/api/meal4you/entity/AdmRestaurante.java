@@ -22,8 +22,8 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(name = "administrador_restaurante")
-
 public class AdmRestaurante {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id_admin;

@@ -27,8 +27,8 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(name = "refeicao")
-
 public class Refeicao {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idRefeicao;

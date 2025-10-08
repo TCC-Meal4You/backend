@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -28,8 +27,8 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(name = "ingrediente")
-
 public class Ingrediente {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idIngrediente;
@@ -47,6 +46,6 @@ public class Ingrediente {
     @OneToMany(mappedBy = "ingrediente")
     private List<RefeicaoIngrediente> refeicaoIngredientes;
 
-    @OneToOne(mappedBy = "ingrediente")
-    private Restricao restricao;
+    @OneToMany(mappedBy = "ingrediente")
+    private List<IngredienteRestricao> restricoes;
 }
