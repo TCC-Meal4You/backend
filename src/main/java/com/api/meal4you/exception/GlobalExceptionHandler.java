@@ -46,7 +46,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
-        // imprime stack trace para depuração
         ex.printStackTrace();
         String mensagem = "Erro interno no servidor: " + ex.getMessage();
         return ResponseEntity
