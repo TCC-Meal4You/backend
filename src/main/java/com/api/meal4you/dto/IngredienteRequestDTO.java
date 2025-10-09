@@ -1,5 +1,7 @@
 package com.api.meal4you.dto;
 
+import java.util.List;
+
 import lombok.*;
 
 @Getter
@@ -10,5 +12,5 @@ import lombok.*;
 public class IngredienteRequestDTO {
     private String nome;
     
-    private RestricaoRequestDTO  restricao;
+    private List<Integer> restricoesIds;
 }

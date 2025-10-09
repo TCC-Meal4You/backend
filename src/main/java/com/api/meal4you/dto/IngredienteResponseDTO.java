@@ -1,5 +1,6 @@
 package com.api.meal4you.dto;
 
+import java.util.List;
 import lombok.*;
 
 @Getter
@@ -8,11 +9,11 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class IngredienteResponseDTO {
+    private int idIngrediente;
+
     private String nome;
     
-    private String emailAdmin;
+    private int IdAdmin;
 
-    private String nomeAdmin;
-
-    private RestricaoResponseDTO restricao;
+    private List<RestricaoResponseDTO> restricoes;
 }
