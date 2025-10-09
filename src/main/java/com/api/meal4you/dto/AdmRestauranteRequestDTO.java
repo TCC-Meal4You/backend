@@ -8,9 +8,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class AdmRestauranteRequestDTO {
-    private String email;
-
     private String nome;
+
+    private String email;
 
     private String senha;
 }
