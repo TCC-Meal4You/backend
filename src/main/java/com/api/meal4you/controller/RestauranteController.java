@@ -26,7 +26,8 @@ public class RestauranteController {
 
     @GetMapping("/listar")
     public ResponseEntity<List<RestauranteResponseDTO>> listarRestaurantes(){
-        return ResponseEntity.ok(restauranteService.listarTodos());
+        List<RestauranteResponseDTO> response = restauranteService.listarTodos();
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/atualizar/{id}")

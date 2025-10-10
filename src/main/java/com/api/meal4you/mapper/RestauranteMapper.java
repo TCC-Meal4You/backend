@@ -1,5 +1,8 @@
 package com.api.meal4you.mapper;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
@@ -26,5 +29,11 @@ public class RestauranteMapper {
             .emailAdmin(admin.getEmail())
             .nomeAdmin(admin.getNome())
             .build();
+    }
+
+        public static List<RestauranteResponseDTO> toResponseList(List<Restaurante> restaurantes) {
+        return restaurantes.stream()
+                .map(RestauranteMapper::toResponse)
+                .collect(Collectors.toList());
     }
 }
