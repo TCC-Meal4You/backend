@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,9 +35,11 @@ public class RestauranteService {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
             AdmRestaurante adminExistente = admRestauranteRepository.findByEmail(emailAdmLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                    .orElseThrow(
+                            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
 
-            boolean existe = restauranteRepository.findByNomeAndLocalizacao(dto.getNome(), dto.getLocalizacao()).isPresent();
+            boolean existe = restauranteRepository.findByNomeAndLocalizacao(dto.getNome(), dto.getLocalizacao())
+                    .isPresent();
             if (existe) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Já existe um restaurante com esse nome e localização");
@@ -59,10 +60,8 @@ public class RestauranteService {
     @Transactional
     public List<RestauranteResponseDTO> listarTodos() {
         try {
-            return restauranteRepository.findAll()
-                    .stream()
-                    .map(RestauranteMapper::toResponse)
-                    .collect(Collectors.toList());
+            List<Restaurante> restaurantes = restauranteRepository.findAll();
+            return RestauranteMapper.toResponseList(restaurantes);
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao listar restaurantes: " + ex.getMessage());
@@ -85,12 +84,14 @@ public class RestauranteService {
                 alterado = true;
             }
 
-            if (dto.getLocalizacao() != null && !dto.getLocalizacao().isBlank() && !dto.getLocalizacao().equals(restaurante.getLocalizacao())) {
+            if (dto.getLocalizacao() != null && !dto.getLocalizacao().isBlank()
+                    && !dto.getLocalizacao().equals(restaurante.getLocalizacao())) {
                 restaurante.setLocalizacao(dto.getLocalizacao());
                 alterado = true;
             }
 
-            if (dto.getTipo_comida() != null && !dto.getTipo_comida().isBlank() && !dto.getTipo_comida().equals(restaurante.getTipo_comida())) {
+            if (dto.getTipo_comida() != null && !dto.getTipo_comida().isBlank()
+                    && !dto.getTipo_comida().equals(restaurante.getTipo_comida())) {
                 restaurante.setTipo_comida(dto.getTipo_comida());
                 alterado = true;
             }
