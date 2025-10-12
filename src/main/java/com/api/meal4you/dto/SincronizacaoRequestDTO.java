@@ -7,10 +7,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AdmRestauranteRequestDTO {
-    private String nome;
-
-    private String email;
-
+public class SincronizacaoRequestDTO {
     private String senha;
 }

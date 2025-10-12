@@ -1,4 +1,4 @@
-package com.api.meal4you.security;
+package com.api.meal4you.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,6 +7,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.api.meal4you.security.JwtAuthFilter;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -34,6 +36,8 @@ public class SecurityConfig {
 
                         .requestMatchers("/usuario/login", "/usuario/cadastrar").permitAll()
                         .requestMatchers("/admin/login", "/admin/cadastrar").permitAll()
+                        .requestMatchers("/restricoes/sincronizar").permitAll()
+
 
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/restaurante/**").hasRole("ADMIN")

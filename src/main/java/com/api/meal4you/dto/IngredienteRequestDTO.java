@@ -1,5 +1,7 @@
 package com.api.meal4you.dto;
 
+import java.util.List;
+
 import lombok.*;
 
 @Getter
@@ -7,10 +9,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AdmRestauranteRequestDTO {
+public class IngredienteRequestDTO {
     private String nome;
-
-    private String email;
-
-    private String senha;
+    
+    private List<Integer> restricoesIds;
 }

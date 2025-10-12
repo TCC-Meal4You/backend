@@ -9,9 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,30 +22,22 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "usuario")
-public class Usuario {
-    
+@Table(name = "restricao")
+public class Restricao {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id_usuario;
+    private int idRestricao;
 
     @NotBlank
-    @Size(min = 3, max = 150)
-    @Column(length = 150)
-    private String nome;
-    
-    @NotBlank
-    @Size(max = 200)
-    @Column(length = 200, unique = true)
-    @Email
-    private String email;
-    
-    @NotBlank
-    @Size(min = 6, max = 60)
-    @Column(length = 60)
-    private String senha;
+    @Column(length = 100, unique = true, nullable = false)
+    private String tipo;
 
-    // Novo relacionamento com a tabela intermediária UsuarioRestricao
-    @OneToMany(mappedBy = "usuario")
-    private List<UsuarioRestricao> restricoes;
+    // Relacionamento com usuarios através da tabela intermediária
+    @OneToMany(mappedBy = "restricao")
+    private List<UsuarioRestricao> usuarios;
+
+    // Relacionamento com ingredientes através da tabela intermediária
+    @OneToMany(mappedBy = "restricao")
+    private List<IngredienteRestricao> ingredientes;
 }
