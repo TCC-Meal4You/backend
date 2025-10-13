@@ -11,32 +11,32 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/admins")
 @RequiredArgsConstructor
 public class AdmRestauranteController {
 
     private final AdmRestauranteService admRestauranteService;
 
-    @PostMapping("/cadastrar")
+    @PostMapping
     public ResponseEntity<AdmRestauranteResponseDTO> cadastrarAdm(@RequestBody AdmRestauranteRequestDTO dto) {
         AdmRestauranteResponseDTO response = admRestauranteService.cadastrarAdm(dto);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/buscar/email")
-    public ResponseEntity<AdmRestauranteResponseDTO> buscarPorEmail(@RequestParam String email) {
+    @GetMapping
+    public ResponseEntity<AdmRestauranteResponseDTO> buscarAdmPorEmail(@RequestParam String email) {
         AdmRestauranteResponseDTO response = admRestauranteService.buscarPorEmail(email);
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/atualizar/{id}")
-    public ResponseEntity<AdmRestauranteResponseDTO> atualizarPorId(@PathVariable int id,
+    @PutMapping("/{id}")
+    public ResponseEntity<AdmRestauranteResponseDTO> atualizarAdmPorId(@PathVariable int id,
             @RequestBody AdmRestauranteRequestDTO dto) {
         AdmRestauranteResponseDTO response = admRestauranteService.atualizarPorId(id, dto);
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/deletar/email")
+    @DeleteMapping
     public ResponseEntity<Void> deletarAdmPorEmail(@RequestParam String email, @RequestParam String senha) {
         admRestauranteService.deletarPorEmail(email, senha);
         return ResponseEntity.ok().build();
