@@ -157,7 +157,7 @@ public class AdmRestauranteService {
             tokenStore.salvarToken(token);
 
             Map<String, Object> response = new HashMap<>();
-            response.put("id", adm.getId_admin());
+            response.put("id", adm.getIdAdmin());
             response.put("nome", adm.getNome());
             response.put("email", adm.getEmail());
             response.put("token", token);

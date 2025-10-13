@@ -13,7 +13,7 @@ public class RestauranteMapper {
         return Restaurante.builder()
             .nome(dto.getNome())
             .localizacao(dto.getLocalizacao())
-            .tipo_comida(dto.getTipo_comida())
+            .tipoComida(dto.getTipoComida())
             .aberto(dto.isAberto())
             .admin(admin)
             .build();
@@ -24,7 +24,7 @@ public class RestauranteMapper {
         return RestauranteResponseDTO.builder()
             .nome(restaurante.getNome())
             .localizacao(restaurante.getLocalizacao())
-            .tipo_comida(restaurante.getTipo_comida())
+            .tipoComida(restaurante.getTipoComida())
             .aberto(restaurante.isAberto())
             .emailAdmin(admin.getEmail())
             .nomeAdmin(admin.getNome())

@@ -12,7 +12,7 @@ public class RestauranteRequestDTO {
 
     private String localizacao;
 
-    private String tipo_comida;
+    private String tipoComida;
 
     private boolean aberto;
     
