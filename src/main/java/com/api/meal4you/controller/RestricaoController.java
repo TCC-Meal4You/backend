@@ -25,7 +25,7 @@ public class RestricaoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RestricaoResponseDTO> buscarPorId(@PathVariable int id) {
+    public ResponseEntity<RestricaoResponseDTO> buscarRestricoesPorId(@PathVariable int id) {
         RestricaoResponseDTO response = restricaoService.buscarPorId(id);
         return ResponseEntity.ok(response);
     }

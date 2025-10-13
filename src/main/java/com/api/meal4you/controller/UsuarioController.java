@@ -10,31 +10,31 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/usuario")
+@RequestMapping("/usuarios")
 @RequiredArgsConstructor
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    @PostMapping("/cadastrar")
+    @PostMapping
     public ResponseEntity<UsuarioResponseDTO> cadastrarUsuario(@RequestBody UsuarioRequestDTO dto) {
         UsuarioResponseDTO response = usuarioService.cadastrarUsuario(dto);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/buscar")
+    @GetMapping
     public ResponseEntity<UsuarioResponseDTO> buscarUsuarioPorEmail(@RequestParam String email) {
         UsuarioResponseDTO response = usuarioService.buscarUsuarioPorEmail(email);
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/atualizar")
-    public ResponseEntity<UsuarioResponseDTO> atualizarUsuarioPorId(@RequestParam int id, @RequestBody UsuarioRequestDTO dto) {
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioResponseDTO> atualizarUsuarioPorId(@PathVariable int id, @RequestBody UsuarioRequestDTO dto) {
         UsuarioResponseDTO response = usuarioService.atualizarUsuarioPorId(id, dto);
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/deletar")
+    @DeleteMapping
     public ResponseEntity<Map<String, String>> deletarUsuarioPorEmail(@RequestParam String email, @RequestParam String senha) {
         usuarioService.deletarUsuarioPorEmail(email, senha);
         return ResponseEntity.ok(Map.of("mensagem", "Usuário deletado com sucesso."));

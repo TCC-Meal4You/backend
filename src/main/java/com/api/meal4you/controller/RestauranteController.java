@@ -12,31 +12,31 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/restaurante")
+@RequestMapping("/restaurantes")
 @RequiredArgsConstructor
 public class RestauranteController {
 
     private final RestauranteService restauranteService;
 
-    @PostMapping("/cadastrar")
+    @PostMapping
     public ResponseEntity<RestauranteResponseDTO> cadastrarRestaurante(@RequestBody RestauranteRequestDTO dto) {
         RestauranteResponseDTO response = restauranteService.cadastrarRestaurante(dto);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/listar")
+    @GetMapping
     public ResponseEntity<List<RestauranteResponseDTO>> listarRestaurantes(){
         List<RestauranteResponseDTO> response = restauranteService.listarTodos();
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/atualizar/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<RestauranteResponseDTO> atualizarRestaurantePorId(@PathVariable int id, @RequestBody RestauranteRequestDTO dto) {
         RestauranteResponseDTO response = restauranteService.atualizarPorAdmLogado(id, dto);
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/deletar")
+    @DeleteMapping
     public ResponseEntity<Void> excluirRestaurantes(@RequestParam String nome, @RequestParam String localizacao) {
         restauranteService.deletarRestaurante(nome, localizacao);
         return ResponseEntity.ok().build();
