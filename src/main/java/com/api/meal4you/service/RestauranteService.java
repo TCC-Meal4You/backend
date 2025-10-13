@@ -90,6 +90,12 @@ public class RestauranteService {
                 alterado = true;
             }
 
+            if(dto.getDescricao() != null && !dto.getDescricao().isBlank()
+                    && !dto.getDescricao().equals(restaurante.getDescricao())) {
+                restaurante.setDescricao(dto.getDescricao());
+                alterado = true;
+            }
+
             if (dto.getTipoComida() != null && !dto.getTipoComida().isBlank()
                     && !dto.getTipoComida().equals(restaurante.getTipoComida())) {
                 restaurante.setTipoComida(dto.getTipoComida());

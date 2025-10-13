@@ -8,9 +8,13 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class RestauranteResponseDTO {
+    private int idRestaurante;
+
     private String nome;
 
     private String localizacao;
+
+    private String descricao;
 
     private String tipoComida;
 

@@ -11,6 +11,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,10 +46,16 @@ public class Restaurante {
     private String localizacao;
 
     @NotBlank
+    @Size(min = 30, max = 200)
+    @Column(length = 200)
+    private String descricao;
+
+    @NotBlank
     @Size(min = 3, max = 100)
     @Column(length = 100)
     private String tipoComida;
 
+    @NotNull
     private boolean aberto;
 
     @OneToOne(fetch = FetchType.EAGER)

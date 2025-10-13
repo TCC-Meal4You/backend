@@ -12,6 +12,8 @@ public class RestauranteRequestDTO {
 
     private String localizacao;
 
+    private String descricao;
+
     private String tipoComida;
 
     private boolean aberto;
