@@ -90,9 +90,9 @@ public class RestauranteService {
                 alterado = true;
             }
 
-            if (dto.getTipo_comida() != null && !dto.getTipo_comida().isBlank()
-                    && !dto.getTipo_comida().equals(restaurante.getTipo_comida())) {
-                restaurante.setTipo_comida(dto.getTipo_comida());
+            if (dto.getTipoComida() != null && !dto.getTipoComida().isBlank()
+                    && !dto.getTipoComida().equals(restaurante.getTipoComida())) {
+                restaurante.setTipoComida(dto.getTipoComida());
                 alterado = true;
             }
 

@@ -32,7 +32,7 @@ public class Restaurante {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id_restaurante;
+    private int idRestaurante;
 
     @NotBlank
     @Size(min = 3, max = 120)
@@ -47,12 +47,12 @@ public class Restaurante {
     @NotBlank
     @Size(min = 3, max = 100)
     @Column(length = 100)
-    private String tipo_comida;
+    private String tipoComida;
 
     private boolean aberto;
 
     @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_admin", referencedColumnName = "id_admin", nullable = false)
+    @JoinColumn(name = "id_admin", referencedColumnName = "idAdmin", nullable = false)
     private AdmRestaurante admin;
 
 }

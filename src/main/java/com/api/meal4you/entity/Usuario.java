@@ -29,7 +29,7 @@ public class Usuario {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id_usuario;
+    private int idUsuario;
 
     @NotBlank
     @Size(min = 3, max = 150)
