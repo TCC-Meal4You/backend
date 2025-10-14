@@ -117,7 +117,7 @@ public class UsuarioService {
         tokenStore.salvarToken(token);
 
         Map<String, Object> response = new HashMap<>();
-        response.put("id", usuario.getId_usuario());
+        response.put("id", usuario.getIdUsuario());
         response.put("nome", usuario.getNome());
         response.put("email", usuario.getEmail());
         response.put("token", token);

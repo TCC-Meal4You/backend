@@ -40,7 +40,7 @@ public class Ingrediente {
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "id_admin", referencedColumnName = "id_admin", nullable = false)
+    @JoinColumn(name = "id_admin", referencedColumnName = "idAdmin", nullable = false)
     private AdmRestaurante admin;
 
     @OneToMany(mappedBy = "ingrediente")

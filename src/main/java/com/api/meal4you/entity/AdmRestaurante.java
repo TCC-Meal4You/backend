@@ -26,7 +26,7 @@ public class AdmRestaurante {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id_admin;
+    private int idAdmin;
 
     @NotBlank
     @Size(max = 200)
