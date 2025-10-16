@@ -1,5 +1,7 @@
 package com.api.meal4you.controller;
 
+import com.api.meal4you.dto.LoginRequestDTO;
+import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.dto.UsuarioRequestDTO;
 import com.api.meal4you.dto.UsuarioResponseDTO;
 import com.api.meal4you.service.UsuarioService;
@@ -41,8 +43,8 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody UsuarioRequestDTO dto) {
-        Map<String, Object> response = usuarioService.fazerLogin(dto.getEmail(), dto.getSenha());
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
+        LoginResponseDTO response = usuarioService.fazerLogin(dto);
         return ResponseEntity.ok(response);
     }
 

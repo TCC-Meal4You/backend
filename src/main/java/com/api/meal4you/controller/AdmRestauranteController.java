@@ -2,10 +2,10 @@ package com.api.meal4you.controller;
 
 import com.api.meal4you.dto.AdmRestauranteRequestDTO;
 import com.api.meal4you.dto.AdmRestauranteResponseDTO;
+import com.api.meal4you.dto.LoginRequestDTO;
+import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.service.AdmRestauranteService;
 import lombok.RequiredArgsConstructor;
-
-import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,9 +43,8 @@ public class AdmRestauranteController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody AdmRestauranteRequestDTO dto) {
-        Map<String, Object> response = admRestauranteService.fazerLogin(
-                dto.getEmail(), dto.getSenha());
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
+        LoginResponseDTO response = admRestauranteService.fazerLogin(dto);
         return ResponseEntity.ok(response);
     }
 
