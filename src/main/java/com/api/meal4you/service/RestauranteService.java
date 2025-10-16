@@ -90,7 +90,7 @@ public class RestauranteService {
                 alterado = true;
             }
 
-            if(dto.getDescricao() != null && !dto.getDescricao().isBlank()
+            if (dto.getDescricao() != null && !dto.getDescricao().isBlank()
                     && !dto.getDescricao().equals(restaurante.getDescricao())) {
                 restaurante.setDescricao(dto.getDescricao());
                 alterado = true;

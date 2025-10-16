@@ -2,17 +2,17 @@ package com.api.meal4you.service;
 
 import com.api.meal4you.dto.AdmRestauranteRequestDTO;
 import com.api.meal4you.dto.AdmRestauranteResponseDTO;
+import com.api.meal4you.dto.LoginRequestDTO;
+import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.mapper.AdmRestauranteMapper;
+import com.api.meal4you.mapper.LoginMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 import com.api.meal4you.security.JwtUtil;
 import com.api.meal4you.security.TokenStore;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -87,7 +87,8 @@ public class AdmRestauranteService {
     public AdmRestauranteResponseDTO atualizarPorId(int id, AdmRestauranteRequestDTO dto) {
         try {
             AdmRestaurante adm = admRepository.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                    .orElseThrow(
+                            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
 
             validarAdmLogado(adm.getEmail());
 
@@ -104,7 +105,8 @@ public class AdmRestauranteService {
                 alterado = true;
             }
 
-            if (dto.getSenha() != null && !dto.getSenha().isBlank() && !encoder.matches(dto.getSenha(), adm.getSenha())) {
+            if (dto.getSenha() != null && !dto.getSenha().isBlank()
+                    && !encoder.matches(dto.getSenha(), adm.getSenha())) {
                 tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
                 adm.setSenha(encoder.encode(dto.getSenha()));
                 alterado = true;
@@ -144,25 +146,21 @@ public class AdmRestauranteService {
         }
     }
 
-    public Map<String, Object> fazerLogin(String email, String senha) {
+    public LoginResponseDTO fazerLogin(LoginRequestDTO dto) {
         try {
-            AdmRestaurante adm = admRepository.findByEmail(email)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
+            AdmRestaurante adm = admRepository.findByEmail(dto.getEmail())
+                    .orElseThrow(
+                            () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
 
-            if (!encoder.matches(senha, adm.getSenha())) {
+            if (!encoder.matches(dto.getSenha(), adm.getSenha())) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta");
             }
 
             String token = jwtUtil.gerarToken(adm.getEmail(), "ADMIN");
             tokenStore.salvarToken(token);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", adm.getIdAdmin());
-            response.put("nome", adm.getNome());
-            response.put("email", adm.getEmail());
-            response.put("token", token);
+            return LoginMapper.toResponse(adm, token);
 
-            return response;
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -173,10 +171,13 @@ public class AdmRestauranteService {
 
     public void logout(String header) {
         try {
-            if (header != null && header.startsWith("Bearer ")) {
-                String token = header.substring(7);
-                tokenStore.removerToken(token);
+            if (header == null || !header.startsWith("Bearer ")) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token inválido ou ausente");
             }
+            String token = header.substring(7);
+            tokenStore.removerToken(token);
+        } catch (ResponseStatusException ex) {
+            throw ex;
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao fazer logout: " + ex.getMessage());
