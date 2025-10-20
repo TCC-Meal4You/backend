@@ -25,20 +25,20 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public ResponseEntity<UsuarioResponseDTO> buscarUsuarioPorEmail(@RequestParam String email) {
-        UsuarioResponseDTO response = usuarioService.buscarUsuarioPorEmail(email);
+    public ResponseEntity<UsuarioResponseDTO> buscarMeuPefil() {
+        UsuarioResponseDTO response = usuarioService.buscarMeuPerfil();
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> atualizarUsuarioPorId(@PathVariable int id, @RequestBody UsuarioRequestDTO dto) {
-        UsuarioResponseDTO response = usuarioService.atualizarUsuarioPorId(id, dto);
+    @PutMapping
+    public ResponseEntity<UsuarioResponseDTO> atualizarMeuPefil(@RequestBody UsuarioRequestDTO dto) {
+        UsuarioResponseDTO response = usuarioService.atualizarMeuPerfil(dto);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping
-    public ResponseEntity<Map<String, String>> deletarUsuarioPorEmail(@RequestParam String email, @RequestParam String senha) {
-        usuarioService.deletarUsuarioPorEmail(email, senha);
+    public ResponseEntity<Map<String, String>> deletarMinhaConta(@RequestParam String senha) {
+        usuarioService.deletarMinhaConta(senha);
         return ResponseEntity.ok(Map.of("mensagem", "Usuário deletado com sucesso."));
     }
 

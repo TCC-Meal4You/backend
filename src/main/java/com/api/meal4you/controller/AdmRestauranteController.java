@@ -24,21 +24,20 @@ public class AdmRestauranteController {
     }
 
     @GetMapping
-    public ResponseEntity<AdmRestauranteResponseDTO> buscarAdmPorEmail(@RequestParam String email) {
-        AdmRestauranteResponseDTO response = admRestauranteService.buscarPorEmail(email);
+    public ResponseEntity<AdmRestauranteResponseDTO> buscarMeuPerfil() {
+        AdmRestauranteResponseDTO response = admRestauranteService.buscarMeuPerfil();
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<AdmRestauranteResponseDTO> atualizarAdmPorId(@PathVariable int id,
-            @RequestBody AdmRestauranteRequestDTO dto) {
-        AdmRestauranteResponseDTO response = admRestauranteService.atualizarPorId(id, dto);
+    @PutMapping
+    public ResponseEntity<AdmRestauranteResponseDTO> atualizarMeuPerfil(@RequestBody AdmRestauranteRequestDTO dto) {
+        AdmRestauranteResponseDTO response = admRestauranteService.atualizarMeuPerfil(dto);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deletarAdmPorEmail(@RequestParam String email, @RequestParam String senha) {
-        admRestauranteService.deletarPorEmail(email, senha);
+    public ResponseEntity<Void> deletarMinhaConta(@RequestParam String senha) {
+        admRestauranteService.deletarMinhaConta(senha);
         return ResponseEntity.ok().build();
     }
 
