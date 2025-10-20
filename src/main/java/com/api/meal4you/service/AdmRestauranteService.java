@@ -43,16 +43,8 @@ public class AdmRestauranteService {
         }
     }
 
-    private void validarAdmLogado(String email) {
-        String emailLogado = getAdmLogadoEmail();
-        if (!email.equals(emailLogado)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não pode acessar outro administrador");
-        }
-    }
-
     public AdmRestauranteResponseDTO cadastrarAdm(AdmRestauranteRequestDTO dto) {
         try {
-            // Verifica se o email já existe
             if (admRepository.findByEmail(dto.getEmail()).isPresent()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
             }
@@ -69,28 +61,26 @@ public class AdmRestauranteService {
         }
     }
 
-    public AdmRestauranteResponseDTO buscarPorEmail(String email) {
+    public AdmRestauranteResponseDTO buscarMeuPerfil() {
         try {
-            validarAdmLogado(email);
-            AdmRestaurante adm = admRepository.findByEmail(email)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
+            String emailLogado = getAdmLogadoEmail();
+            AdmRestaurante adm = admRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
             return AdmRestauranteMapper.toResponse(adm);
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Erro ao buscar administrador: " + ex.getMessage());
+                    "Erro ao buscar perfil do administrador: " + ex.getMessage());
         }
     }
 
     @Transactional
-    public AdmRestauranteResponseDTO atualizarPorId(int id, AdmRestauranteRequestDTO dto) {
+    public AdmRestauranteResponseDTO atualizarMeuPerfil(AdmRestauranteRequestDTO dto) {
         try {
-            AdmRestaurante adm = admRepository.findById(id)
-                    .orElseThrow(
-                            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
-
-            validarAdmLogado(adm.getEmail());
+            String emailLogado = getAdmLogadoEmail();
+            AdmRestaurante adm = admRepository.findByEmail(emailLogado)                    
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
 
             boolean alterado = false;
 
@@ -126,18 +116,18 @@ public class AdmRestauranteService {
         }
     }
 
-    public void deletarPorEmail(String email, String senha) {
+    public void deletarMinhaConta(String senha) {
         try {
-            validarAdmLogado(email);
-            AdmRestaurante adm = admRepository.findByEmail(email)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
+            String emailLogado = getAdmLogadoEmail();
+            AdmRestaurante adm = admRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
 
             if (!encoder.matches(senha, adm.getSenha())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
             }
 
             tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
-            admRepository.deleteByEmail(email);
+            admRepository.delete(adm);
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -149,8 +139,7 @@ public class AdmRestauranteService {
     public LoginResponseDTO fazerLogin(LoginRequestDTO dto) {
         try {
             AdmRestaurante adm = admRepository.findByEmail(dto.getEmail())
-                    .orElseThrow(
-                            () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
 
             if (!encoder.matches(dto.getSenha(), adm.getSenha())) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta");

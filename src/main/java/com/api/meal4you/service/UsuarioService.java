@@ -42,13 +42,6 @@ public class UsuarioService {
         }
     }
 
-    private void validarUsuarioLogado(String email) {
-        String emailLogado = getUsuarioLogadoEmail();
-        if (!email.equals(emailLogado)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não pode acessar outro usuário");
-        }
-    }
-
     public UsuarioResponseDTO cadastrarUsuario(UsuarioRequestDTO dto) {
         try {
             if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
@@ -66,32 +59,32 @@ public class UsuarioService {
         }
     }
 
-    public UsuarioResponseDTO buscarUsuarioPorEmail(String email) {
+    public UsuarioResponseDTO buscarMeuPerfil() {
         try {
-            validarUsuarioLogado(email);
-            Usuario usuario = usuarioRepository.findByEmail(email)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario não encontrado"));
             return UsuarioMapper.toResponse(usuario);
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Erro ao buscar usuário: " + ex.getMessage());
+                    "Erro ao buscar perfil do usuário: " + ex.getMessage());
         }
     }
 
-    public void deletarUsuarioPorEmail(String email, String senha) {
+    public void deletarMinhaConta(String senha) {
         try {
-            validarUsuarioLogado(email);
-            Usuario usuario = usuarioRepository.findByEmail(email)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email não encontrado"));
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
             if (!encoder.matches(senha, usuario.getSenha())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
             }
 
             tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
-            usuarioRepository.deleteByEmail(email);
+            usuarioRepository.delete(usuario);
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -101,12 +94,12 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioResponseDTO atualizarUsuarioPorId(int id, UsuarioRequestDTO dto) {
+    public UsuarioResponseDTO atualizarMeuPerfil(UsuarioRequestDTO dto) {
         try {
-            Usuario usuario = usuarioRepository.findById(id)
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
-            validarUsuarioLogado(usuario.getEmail());
             boolean alterado = false;
 
             if (dto.getNome() != null && !dto.getNome().isBlank() && !dto.getNome().equals(usuario.getNome())) {
