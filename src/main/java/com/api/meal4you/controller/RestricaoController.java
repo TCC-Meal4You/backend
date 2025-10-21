@@ -24,12 +24,6 @@ public class RestricaoController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<RestricaoResponseDTO> buscarPorId(@PathVariable int id) {
-        RestricaoResponseDTO response = restricaoService.buscarPorId(id);
-        return ResponseEntity.ok(response);
-    }
-
     @PostMapping("/sincronizar")
     public ResponseEntity<String> sincronizarComIA(@RequestBody SincronizacaoRequestDTO dto){
         String response = restricaoService.sincronizarComIA(dto);

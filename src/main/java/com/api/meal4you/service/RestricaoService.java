@@ -40,21 +40,6 @@ public class RestricaoService {
         }
     }
 
-    @Transactional
-    public RestricaoResponseDTO buscarPorId(int id) {
-        try {
-            Restricao restricao = restricaoRepository.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "Restrição não encontrada para o ID: " + id));
-            return RestricaoMapper.toResponse(restricao);
-        } catch (ResponseStatusException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Erro ao encontrar restrição: " + ex.getMessage());
-        }
-    }
-
     // Para o Controller (com senha)
     public String sincronizarComIA(SincronizacaoRequestDTO dto) {
         try {

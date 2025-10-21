@@ -2,50 +2,48 @@ package com.api.meal4you.controller;
 
 import com.api.meal4you.dto.AdmRestauranteRequestDTO;
 import com.api.meal4you.dto.AdmRestauranteResponseDTO;
+import com.api.meal4you.dto.LoginRequestDTO;
+import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.service.AdmRestauranteService;
 import lombok.RequiredArgsConstructor;
-
-import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/admins")
 @RequiredArgsConstructor
 public class AdmRestauranteController {
 
     private final AdmRestauranteService admRestauranteService;
 
-    @PostMapping("/cadastrar")
+    @PostMapping
     public ResponseEntity<AdmRestauranteResponseDTO> cadastrarAdm(@RequestBody AdmRestauranteRequestDTO dto) {
         AdmRestauranteResponseDTO response = admRestauranteService.cadastrarAdm(dto);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/buscar/email")
-    public ResponseEntity<AdmRestauranteResponseDTO> buscarPorEmail(@RequestParam String email) {
-        AdmRestauranteResponseDTO response = admRestauranteService.buscarPorEmail(email);
+    @GetMapping
+    public ResponseEntity<AdmRestauranteResponseDTO> buscarMeuPerfil() {
+        AdmRestauranteResponseDTO response = admRestauranteService.buscarMeuPerfil();
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/atualizar/{id}")
-    public ResponseEntity<AdmRestauranteResponseDTO> atualizarPorId(@PathVariable int id,
-            @RequestBody AdmRestauranteRequestDTO dto) {
-        AdmRestauranteResponseDTO response = admRestauranteService.atualizarPorId(id, dto);
+    @PutMapping
+    public ResponseEntity<AdmRestauranteResponseDTO> atualizarMeuPerfil(@RequestBody AdmRestauranteRequestDTO dto) {
+        AdmRestauranteResponseDTO response = admRestauranteService.atualizarMeuPerfil(dto);
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/deletar/email")
-    public ResponseEntity<Void> deletarAdmPorEmail(@RequestParam String email, @RequestParam String senha) {
-        admRestauranteService.deletarPorEmail(email, senha);
+    @DeleteMapping
+    public ResponseEntity<Void> deletarMinhaConta(@RequestParam String senha) {
+        admRestauranteService.deletarMinhaConta(senha);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody AdmRestauranteRequestDTO dto) {
-        Map<String, Object> response = admRestauranteService.fazerLogin(
-                dto.getEmail(), dto.getSenha());
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
+        LoginResponseDTO response = admRestauranteService.fazerLogin(dto);
         return ResponseEntity.ok(response);
     }
 

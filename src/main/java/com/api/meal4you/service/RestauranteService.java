@@ -31,6 +31,7 @@ public class RestauranteService {
         }
     }
 
+    @Transactional
     public RestauranteResponseDTO cadastrarRestaurante(RestauranteRequestDTO dto) {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
@@ -90,9 +91,15 @@ public class RestauranteService {
                 alterado = true;
             }
 
-            if (dto.getTipo_comida() != null && !dto.getTipo_comida().isBlank()
-                    && !dto.getTipo_comida().equals(restaurante.getTipo_comida())) {
-                restaurante.setTipo_comida(dto.getTipo_comida());
+            if (dto.getDescricao() != null && !dto.getDescricao().isBlank()
+                    && !dto.getDescricao().equals(restaurante.getDescricao())) {
+                restaurante.setDescricao(dto.getDescricao());
+                alterado = true;
+            }
+
+            if (dto.getTipoComida() != null && !dto.getTipoComida().isBlank()
+                    && !dto.getTipoComida().equals(restaurante.getTipoComida())) {
+                restaurante.setTipoComida(dto.getTipoComida());
                 alterado = true;
             }
 
@@ -116,6 +123,7 @@ public class RestauranteService {
         }
     }
 
+    @Transactional
     public void deletarRestaurante(String nome, String localizacao) {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
