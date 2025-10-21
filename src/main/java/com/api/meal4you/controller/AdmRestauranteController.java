@@ -2,10 +2,10 @@ package com.api.meal4you.controller;
 
 import com.api.meal4you.dto.AdmRestauranteRequestDTO;
 import com.api.meal4you.dto.AdmRestauranteResponseDTO;
+import com.api.meal4you.dto.LoginRequestDTO;
+import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.service.AdmRestauranteService;
 import lombok.RequiredArgsConstructor;
-
-import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,28 +24,26 @@ public class AdmRestauranteController {
     }
 
     @GetMapping
-    public ResponseEntity<AdmRestauranteResponseDTO> buscarAdmPorEmail(@RequestParam String email) {
-        AdmRestauranteResponseDTO response = admRestauranteService.buscarPorEmail(email);
+    public ResponseEntity<AdmRestauranteResponseDTO> buscarMeuPerfil() {
+        AdmRestauranteResponseDTO response = admRestauranteService.buscarMeuPerfil();
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<AdmRestauranteResponseDTO> atualizarAdmPorId(@PathVariable int id,
-            @RequestBody AdmRestauranteRequestDTO dto) {
-        AdmRestauranteResponseDTO response = admRestauranteService.atualizarPorId(id, dto);
+    @PutMapping
+    public ResponseEntity<AdmRestauranteResponseDTO> atualizarMeuPerfil(@RequestBody AdmRestauranteRequestDTO dto) {
+        AdmRestauranteResponseDTO response = admRestauranteService.atualizarMeuPerfil(dto);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deletarAdmPorEmail(@RequestParam String email, @RequestParam String senha) {
-        admRestauranteService.deletarPorEmail(email, senha);
+    public ResponseEntity<Void> deletarMinhaConta(@RequestParam String senha) {
+        admRestauranteService.deletarMinhaConta(senha);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody AdmRestauranteRequestDTO dto) {
-        Map<String, Object> response = admRestauranteService.fazerLogin(
-                dto.getEmail(), dto.getSenha());
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
+        LoginResponseDTO response = admRestauranteService.fazerLogin(dto);
         return ResponseEntity.ok(response);
     }
 
