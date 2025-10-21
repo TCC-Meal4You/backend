@@ -4,14 +4,23 @@ import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.dto.UsuarioRequestDTO;
 import com.api.meal4you.dto.UsuarioResponseDTO;
+import com.api.meal4you.dto.UsuarioRestricaoRequestDTO;
+import com.api.meal4you.entity.Restricao;
 import com.api.meal4you.entity.Usuario;
+import com.api.meal4you.entity.UsuarioRestricao;
 import com.api.meal4you.mapper.LoginMapper;
 import com.api.meal4you.mapper.UsuarioMapper;
+import com.api.meal4you.repository.RestricaoRepository;
 import com.api.meal4you.repository.UsuarioRepository;
+import com.api.meal4you.repository.UsuarioRestricaoRepository;
 import com.api.meal4you.security.JwtUtil;
 import com.api.meal4you.security.TokenStore;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +32,8 @@ import org.springframework.web.server.ResponseStatusException;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final RestricaoRepository restricaoRepository;
+    private final UsuarioRestricaoRepository usuarioRestricaoRepository;
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtil;
     private final TokenStore tokenStore;
@@ -42,6 +53,7 @@ public class UsuarioService {
         }
     }
 
+    @Transactional
     public UsuarioResponseDTO cadastrarUsuario(UsuarioRequestDTO dto) {
         try {
             if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
@@ -73,6 +85,7 @@ public class UsuarioService {
         }
     }
 
+    @Transactional
     public void deletarMinhaConta(String senha) {
         try {
             String emailLogado = getUsuarioLogadoEmail();
@@ -84,6 +97,7 @@ public class UsuarioService {
             }
 
             tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
+            usuarioRestricaoRepository.deleteByUsuario(usuario);
             usuarioRepository.delete(usuario);
         } catch (ResponseStatusException ex) {
             throw ex;
@@ -129,6 +143,44 @@ public class UsuarioService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao atualizar usuário: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public UsuarioResponseDTO atualizarMinhasRestricoes(UsuarioRestricaoRequestDTO dto) {
+        try {
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+
+            usuarioRestricaoRepository.deleteByUsuario(usuario);
+
+            if (dto.getRestricaoIds() == null || dto.getRestricaoIds().isEmpty()) {
+                return UsuarioMapper.toResponse(usuario);
+            }
+
+            List<Restricao> novasRestricoes = restricaoRepository.findAllById(dto.getRestricaoIds());
+
+            if (novasRestricoes.size() != dto.getRestricaoIds().size()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Um ou mais IDs de restrição são inválidos.");
+            }
+
+            List<UsuarioRestricao> novasAssociacoes = novasRestricoes.stream()
+                    .map(restricao -> UsuarioRestricao.builder()
+                            .usuario(usuario)
+                            .restricao(restricao)
+                            .build())
+                    .collect(Collectors.toList());
+
+            usuarioRestricaoRepository.saveAll(novasAssociacoes);
+            usuario.setUsuarioRestricoes(novasAssociacoes);
+            return UsuarioMapper.toResponse(usuario);
+
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao atualizar as restrições do usuário: " + ex.getMessage());
         }
     }
 

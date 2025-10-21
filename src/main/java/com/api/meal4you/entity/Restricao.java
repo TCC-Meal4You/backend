@@ -1,5 +1,6 @@
 package com.api.meal4you.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.Column;
@@ -33,11 +34,12 @@ public class Restricao {
     @Column(length = 100, unique = true, nullable = false)
     private String tipo;
 
-    // Relacionamento com usuarios através da tabela intermediária
     @OneToMany(mappedBy = "restricao")
-    private List<UsuarioRestricao> usuarios;
+    @Builder.Default
+    private List<UsuarioRestricao> restricaoUsuarios = new ArrayList<>();
 
     // Relacionamento com ingredientes através da tabela intermediária
     @OneToMany(mappedBy = "restricao")
-    private List<IngredienteRestricao> ingredientes;
+    @Builder.Default
+    private List<IngredienteRestricao> ingredientes = new ArrayList<>();
 }
