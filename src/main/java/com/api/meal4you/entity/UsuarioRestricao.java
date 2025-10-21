@@ -2,6 +2,7 @@ package com.api.meal4you.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -18,6 +19,7 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(name = "usuario_restricao")
+@IdClass(UsuarioRestricaoId.class)
 public class UsuarioRestricao {
 
     @Id

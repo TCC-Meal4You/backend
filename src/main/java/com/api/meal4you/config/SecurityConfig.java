@@ -2,6 +2,7 @@ package com.api.meal4you.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,14 +35,25 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        .requestMatchers("/usuario/login", "/usuario/cadastrar").permitAll()
-                        .requestMatchers("/admin/login", "/admin/cadastrar").permitAll()
-                        .requestMatchers("/restricoes/sincronizar").permitAll()
-
-
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/restaurante/**").hasRole("ADMIN")
-                        .requestMatchers("/usuario/**").hasRole("USUARIO")
+                        //Usuario
+                        .requestMatchers(HttpMethod.POST, "/usuarios/login").permitAll() // login
+                        .requestMatchers(HttpMethod.POST, "/usuarios").permitAll() // cadastro
+                        .requestMatchers("/usuarios/**").hasRole("USUARIO") // outros métodos
+                        
+                        //Admin 
+                        .requestMatchers(HttpMethod.POST, "/admins/login").permitAll() // login
+                        .requestMatchers(HttpMethod.POST, "/admins").permitAll() // cadastro
+                        .requestMatchers("/admins/**").hasRole("ADMIN") // outros métodos
+                        
+                        //Restaurante
+                        .requestMatchers(HttpMethod.GET, "/restaurantes").hasRole("USUARIO") // listar
+                        .requestMatchers(HttpMethod.POST, "/restaurantes").hasRole("ADMIN") // cadastrar
+                        .requestMatchers(HttpMethod.PUT, "/restaurantes/{id}").hasRole("ADMIN") // atualizar
+                        .requestMatchers(HttpMethod.DELETE, "/restaurantes").hasRole("ADMIN") // deletar
+                        
+                        //Restrições
+                        .requestMatchers(HttpMethod.GET, "/restricoes").hasAnyRole("ADMIN", "USUARIO") // listar
+                        .requestMatchers(HttpMethod.POST, "/restricoes/sincronizar").permitAll() // sincronizar IA
 
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

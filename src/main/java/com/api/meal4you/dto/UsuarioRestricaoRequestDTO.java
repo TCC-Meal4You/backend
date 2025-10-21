@@ -9,10 +9,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UsuarioResponseDTO {
-    private String nome;
+public class UsuarioRestricaoRequestDTO {
+    
+    private List<Integer> restricaoIds;
 
-    private String email;
-
-    private List<String> restricoes;
 }
