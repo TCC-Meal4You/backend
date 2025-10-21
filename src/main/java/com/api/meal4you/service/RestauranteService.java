@@ -31,6 +31,7 @@ public class RestauranteService {
         }
     }
 
+    @Transactional
     public RestauranteResponseDTO cadastrarRestaurante(RestauranteRequestDTO dto) {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
@@ -122,6 +123,7 @@ public class RestauranteService {
         }
     }
 
+    @Transactional
     public void deletarRestaurante(String nome, String localizacao) {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();

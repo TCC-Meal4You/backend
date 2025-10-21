@@ -43,6 +43,7 @@ public class AdmRestauranteService {
         }
     }
 
+    @Transactional
     public AdmRestauranteResponseDTO cadastrarAdm(AdmRestauranteRequestDTO dto) {
         try {
             if (admRepository.findByEmail(dto.getEmail()).isPresent()) {
@@ -116,6 +117,7 @@ public class AdmRestauranteService {
         }
     }
 
+    @Transactional
     public void deletarMinhaConta(String senha) {
         try {
             String emailLogado = getAdmLogadoEmail();

@@ -4,6 +4,7 @@ import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.dto.UsuarioRequestDTO;
 import com.api.meal4you.dto.UsuarioResponseDTO;
+import com.api.meal4you.dto.UsuarioRestricaoRequestDTO;
 import com.api.meal4you.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,13 +26,13 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public ResponseEntity<UsuarioResponseDTO> buscarMeuPefil() {
+    public ResponseEntity<UsuarioResponseDTO> buscarMeuPerfil() {
         UsuarioResponseDTO response = usuarioService.buscarMeuPerfil();
         return ResponseEntity.ok(response);
     }
 
     @PutMapping
-    public ResponseEntity<UsuarioResponseDTO> atualizarMeuPefil(@RequestBody UsuarioRequestDTO dto) {
+    public ResponseEntity<UsuarioResponseDTO> atualizarMeuPerfil(@RequestBody UsuarioRequestDTO dto) {
         UsuarioResponseDTO response = usuarioService.atualizarMeuPerfil(dto);
         return ResponseEntity.ok(response);
     }
@@ -42,6 +43,12 @@ public class UsuarioController {
         return ResponseEntity.ok(Map.of("mensagem", "Usuário deletado com sucesso."));
     }
 
+    @PutMapping("/restricoes")
+    public ResponseEntity<UsuarioResponseDTO> atualizarMinhasRestricoes(@RequestBody UsuarioRestricaoRequestDTO dto) {
+        UsuarioResponseDTO response = usuarioService.atualizarMinhasRestricoes(dto);
+        return ResponseEntity.ok(response);
+    }
+    
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
         LoginResponseDTO response = usuarioService.fazerLogin(dto);
