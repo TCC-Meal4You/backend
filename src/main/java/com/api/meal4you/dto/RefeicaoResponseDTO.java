@@ -2,7 +2,6 @@ package com.api.meal4you.dto;
 
 import java.math.BigDecimal;
 import java.util.List;
-
 import lombok.*;
 
 @Getter
