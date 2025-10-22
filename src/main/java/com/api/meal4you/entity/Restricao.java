@@ -38,7 +38,6 @@ public class Restricao {
     @Builder.Default
     private List<UsuarioRestricao> restricaoUsuarios = new ArrayList<>();
 
-    // Relacionamento com ingredientes através da tabela intermediária
     @OneToMany(mappedBy = "restricao")
     @Builder.Default
     private List<IngredienteRestricao> ingredientes = new ArrayList<>();
