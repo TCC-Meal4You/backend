@@ -33,3 +33,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### aplication.properties
+src/main/resources/application.properties.example
+src/main/resources/application.properties
