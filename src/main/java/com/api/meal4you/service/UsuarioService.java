@@ -155,6 +155,8 @@ public class UsuarioService {
 
             usuarioRestricaoRepository.deleteByUsuario(usuario);
 
+            usuario.getUsuarioRestricoes().clear();
+
             if (dto.getRestricaoIds() == null || dto.getRestricaoIds().isEmpty()) {
                 return UsuarioMapper.toResponse(usuario);
             }
@@ -173,7 +175,9 @@ public class UsuarioService {
                     .collect(Collectors.toList());
 
             usuarioRestricaoRepository.saveAll(novasAssociacoes);
+
             usuario.setUsuarioRestricoes(novasAssociacoes);
+            
             return UsuarioMapper.toResponse(usuario);
 
         } catch (ResponseStatusException ex) {
