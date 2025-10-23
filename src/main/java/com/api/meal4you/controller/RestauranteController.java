@@ -9,6 +9,9 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 @RestController
@@ -41,4 +44,11 @@ public class RestauranteController {
         restauranteService.deletarRestaurante(nome, localizacao);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/meu-restaurante")
+    public ResponseEntity<RestauranteResponseDTO> buscarMeuRestaurante() {
+        RestauranteResponseDTO response = restauranteService.buscarMeuRestaurante();
+        return ResponseEntity.ok(response);
+    }
+    
 }

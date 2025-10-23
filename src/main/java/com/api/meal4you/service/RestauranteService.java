@@ -146,4 +146,27 @@ public class RestauranteService {
                     "Erro ao deletar restaurante: " + ex.getMessage());
         }
     }
+
+    @Transactional
+    public RestauranteResponseDTO buscarMeuRestaurante() {
+        try {
+            String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
+
+            AdmRestaurante admin = admRestauranteRepository.findByEmail(emailAdmLogado)
+                    .orElseThrow(
+                            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+
+            Restaurante restaurante = restauranteRepository.findByAdmin(admin)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Restaurante não encontrado. Cadastre primeiro"));
+
+            return RestauranteMapper.toResponse(restaurante);
+
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao buscar restaurante: " + ex.getMessage());
+        }
+    }
 }
