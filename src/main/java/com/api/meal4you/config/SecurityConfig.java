@@ -53,6 +53,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/restaurantes/{id}").hasRole("ADMIN") // atualizar
                         .requestMatchers(HttpMethod.DELETE, "/restaurantes").hasRole("ADMIN") // deletar
                         
+                        //Ingredientes
+                        .requestMatchers("/ingredientes/**").hasRole("ADMIN") // todos os métodos
+
                         //Restrições
                         .requestMatchers(HttpMethod.GET, "/restricoes").hasAnyRole("ADMIN", "USUARIO") // listar
                         .requestMatchers(HttpMethod.POST, "/restricoes/sincronizar").permitAll() // sincronizar IA

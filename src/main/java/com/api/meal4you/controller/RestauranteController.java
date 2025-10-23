@@ -9,10 +9,6 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-
 
 @RestController
 @RequestMapping("/restaurantes")
@@ -28,7 +24,7 @@ public class RestauranteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RestauranteResponseDTO>> listarRestaurantes(){
+    public ResponseEntity<List<RestauranteResponseDTO>> listarRestaurantes() {
         List<RestauranteResponseDTO> response = restauranteService.listarTodos();
         return ResponseEntity.ok(response);
     }
@@ -40,7 +36,7 @@ public class RestauranteController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> excluirRestaurantes(@RequestParam String nome, @RequestParam String localizacao) {
+    public ResponseEntity<Void> deletarRestaurantes(@RequestParam String nome, @RequestParam String localizacao) {
         restauranteService.deletarRestaurante(nome, localizacao);
         return ResponseEntity.ok().build();
     }
