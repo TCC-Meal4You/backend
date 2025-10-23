@@ -11,9 +11,9 @@ import com.api.meal4you.repository.AdmRestauranteRepository;
 import com.api.meal4you.security.JwtUtil;
 import com.api.meal4you.security.TokenStore;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -62,6 +62,7 @@ public class AdmRestauranteService {
         }
     }
 
+    @Transactional
     public AdmRestauranteResponseDTO buscarMeuPerfil() {
         try {
             String emailLogado = getAdmLogadoEmail();
@@ -138,6 +139,7 @@ public class AdmRestauranteService {
         }
     }
 
+    @Transactional
     public LoginResponseDTO fazerLogin(LoginRequestDTO dto) {
         try {
             AdmRestaurante adm = admRepository.findByEmail(dto.getEmail())
