@@ -1,14 +1,19 @@
 package com.api.meal4you.controller;
 
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import com.api.meal4you.dto.AdmRestauranteRequestDTO;
 import com.api.meal4you.dto.AdmRestauranteResponseDTO;
 import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
+import com.api.meal4you.dto.VerificaEmailRequestDTO;
 import com.api.meal4you.service.AdmRestauranteService;
-import lombok.RequiredArgsConstructor;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/admins")
@@ -16,6 +21,12 @@ import org.springframework.web.bind.annotation.*;
 public class AdmRestauranteController {
 
     private final AdmRestauranteService admRestauranteService;
+
+    @PostMapping("/verifica-email")
+    public ResponseEntity<Map<String, String>> enviarCodigo(@Valid @RequestBody VerificaEmailRequestDTO dto) {
+        admRestauranteService.enviarCodigoVerificacao(dto.getEmail());
+        return ResponseEntity.ok(Map.of("mensagem", "Código de verificação enviado para o e-mail."));
+    }
 
     @PostMapping
     public ResponseEntity<AdmRestauranteResponseDTO> cadastrarAdm(@RequestBody AdmRestauranteRequestDTO dto) {

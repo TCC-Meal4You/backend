@@ -1,5 +1,12 @@
 package com.api.meal4you.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.api.meal4you.dto.AdmRestauranteRequestDTO;
 import com.api.meal4you.dto.AdmRestauranteResponseDTO;
 import com.api.meal4you.dto.LoginRequestDTO;
@@ -13,13 +20,6 @@ import com.api.meal4you.security.TokenStore;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
 @Service
 @RequiredArgsConstructor
 public class AdmRestauranteService {
@@ -27,6 +27,8 @@ public class AdmRestauranteService {
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtil;
     private final TokenStore tokenStore;
+    private final VerificaEmailService verificaEmailService;
+    private final EmailCodeSenderService emailCodeSenderService;
 
     public String getAdmLogadoEmail() {
         try {
@@ -43,12 +45,34 @@ public class AdmRestauranteService {
         }
     }
 
+    public void enviarCodigoVerificacao(String email) {
+        try {
+            if (admRepository.findByEmail(email).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
+            }
+            String codigo = verificaEmailService.gerarESalvarCodigo(email);
+            String subject = "Meal4You - Código de Verificação de Administrador";
+            String body = "Olá! \n\nEsse é o seu código de verificação para concluir o cadastro: \n\n" + codigo + "\n\n ATENÇÃO: O CÓDIGO É VÁLIDO SOMENTE POR 5 MINUTOS.";
+            emailCodeSenderService.enviarEmail(email, subject, body);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao enviar código de verificação: " + ex.getMessage());
+        }
+    }
+
     @Transactional
     public AdmRestauranteResponseDTO cadastrarAdm(AdmRestauranteRequestDTO dto) {
         try {
+            if (!verificaEmailService.validarCodigo(dto.getEmail(), dto.getCodigoVerificacao())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
+            }
+
             if (admRepository.findByEmail(dto.getEmail()).isPresent()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
             }
+            
             AdmRestaurante adm = AdmRestauranteMapper.toEntity(dto);
             adm.setSenha(encoder.encode(adm.getSenha()));
             admRepository.saveAndFlush(adm);
