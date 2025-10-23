@@ -15,12 +15,13 @@ import com.api.meal4you.repository.UsuarioRepository;
 import com.api.meal4you.repository.UsuarioRestricaoRepository;
 import com.api.meal4you.security.JwtUtil;
 import com.api.meal4you.security.TokenStore;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -71,6 +72,7 @@ public class UsuarioService {
         }
     }
 
+    @Transactional
     public UsuarioResponseDTO buscarMeuPerfil() {
         try {
             String emailLogado = getUsuarioLogadoEmail();
@@ -155,6 +157,8 @@ public class UsuarioService {
 
             usuarioRestricaoRepository.deleteByUsuario(usuario);
 
+            usuario.getUsuarioRestricoes().clear();
+
             if (dto.getRestricaoIds() == null || dto.getRestricaoIds().isEmpty()) {
                 return UsuarioMapper.toResponse(usuario);
             }
@@ -173,7 +177,9 @@ public class UsuarioService {
                     .collect(Collectors.toList());
 
             usuarioRestricaoRepository.saveAll(novasAssociacoes);
+
             usuario.setUsuarioRestricoes(novasAssociacoes);
+            
             return UsuarioMapper.toResponse(usuario);
 
         } catch (ResponseStatusException ex) {
@@ -184,6 +190,7 @@ public class UsuarioService {
         }
     }
 
+    @Transactional
     public LoginResponseDTO fazerLogin(LoginRequestDTO dto) {
         try {
             Usuario usuario = usuarioRepository.findByEmail(dto.getEmail())

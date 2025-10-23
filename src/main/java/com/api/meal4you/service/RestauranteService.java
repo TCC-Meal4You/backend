@@ -8,10 +8,11 @@ import com.api.meal4you.mapper.RestauranteMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -143,6 +144,29 @@ public class RestauranteService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao deletar restaurante: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public RestauranteResponseDTO buscarMeuRestaurante() {
+        try {
+            String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
+
+            AdmRestaurante admin = admRestauranteRepository.findByEmail(emailAdmLogado)
+                    .orElseThrow(
+                            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+
+            Restaurante restaurante = restauranteRepository.findByAdmin(admin)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Restaurante não encontrado. Cadastre primeiro"));
+
+            return RestauranteMapper.toResponse(restaurante);
+
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao buscar restaurante: " + ex.getMessage());
         }
     }
 }
