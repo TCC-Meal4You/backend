@@ -38,6 +38,7 @@ public class SecurityConfig {
                         //Usuario
                         .requestMatchers(HttpMethod.POST, "/usuarios/login").permitAll() // login
                         .requestMatchers(HttpMethod.POST, "/usuarios").permitAll() // cadastro
+                        .requestMatchers(HttpMethod.POST, "/usuarios/verifica-email").permitAll() // verifica email
                         .requestMatchers("/usuarios/**").hasRole("USUARIO") // outros métodos
                         
                         //Admin 

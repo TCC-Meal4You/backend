@@ -1,5 +1,15 @@
 package com.api.meal4you.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.dto.UsuarioRequestDTO;
@@ -18,16 +28,6 @@ import com.api.meal4you.security.TokenStore;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
@@ -38,6 +38,8 @@ public class UsuarioService {
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtil;
     private final TokenStore tokenStore;
+    private final verificaEmailService verificaEmailService;
+    private final EmailCodeSenderService emailCodeSenderService;
 
     public String getUsuarioLogadoEmail() {
         try {
@@ -55,11 +57,34 @@ public class UsuarioService {
     }
 
     @Transactional
+    public void enviarCodigoVerificacao(String email) {
+        try {
+            if (usuarioRepository.findByEmail(email).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado");
+            }
+            String codigo = verificaEmailService.gerarESalvarCodigo(email);
+            String subject = "Meal4You - Código de Verificação";
+            String body = "Olá! \n\nEsse é o seu código de verificação para concluir o cadastro: \n\n" + codigo + "\n\n ATENÇÃO: O CÓDIGO É VÁLIDO SOMENTE POR 5 MINUTOS.";
+            emailCodeSenderService.enviarEmail(email, subject, body);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao enviar código de verificação: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
     public UsuarioResponseDTO cadastrarUsuario(UsuarioRequestDTO dto) {
         try {
+            if (!verificaEmailService.validarCodigo(dto.getEmail(), dto.getCodigoVerificacao())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
+            }
+
             if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado");
             }
+            
             Usuario usuario = UsuarioMapper.toEntity(dto);
             usuario.setSenha(encoder.encode(usuario.getSenha()));
             usuarioRepository.saveAndFlush(usuario);

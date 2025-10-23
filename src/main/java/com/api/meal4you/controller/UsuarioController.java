@@ -1,16 +1,28 @@
 package com.api.meal4you.controller;
 
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.dto.UsuarioRequestDTO;
 import com.api.meal4you.dto.UsuarioResponseDTO;
 import com.api.meal4you.dto.UsuarioRestricaoRequestDTO;
+import com.api.meal4you.dto.VerificaEmailRequestDTO;
 import com.api.meal4you.service.UsuarioService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/usuarios")
@@ -18,6 +30,12 @@ import java.util.Map;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+
+    @PostMapping("/verifica-email")
+    public ResponseEntity<Map<String, String>> enviarCodigo(@Valid @RequestBody VerificaEmailRequestDTO dto) {
+        usuarioService.enviarCodigoVerificacao(dto.getEmail());
+        return ResponseEntity.ok(Map.of("mensagem", "Código de verificação enviado para o e-mail."));
+    }
 
     @PostMapping
     public ResponseEntity<UsuarioResponseDTO> cadastrarUsuario(@RequestBody UsuarioRequestDTO dto) {
