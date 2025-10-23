@@ -38,7 +38,7 @@ public class UsuarioService {
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtil;
     private final TokenStore tokenStore;
-    private final verificaEmailService verificaEmailService;
+    private final VerificaEmailService verificaEmailService;
     private final EmailCodeSenderService emailCodeSenderService;
 
     public String getUsuarioLogadoEmail() {

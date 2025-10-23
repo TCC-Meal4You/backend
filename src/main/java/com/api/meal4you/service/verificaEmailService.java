@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
-public class verificaEmailService {
+public class VerificaEmailService {
 
     // Armazena: código e o horário de expiração para cada e-mail
     private final Map<String, CodigoInfo> emailParaCodigo = new ConcurrentHashMap<>();

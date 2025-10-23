@@ -44,6 +44,7 @@ public class SecurityConfig {
                         //Admin 
                         .requestMatchers(HttpMethod.POST, "/admins/login").permitAll() // login
                         .requestMatchers(HttpMethod.POST, "/admins").permitAll() // cadastro
+                        .requestMatchers(HttpMethod.POST, "/admins/verifica-email").permitAll() // verifica email
                         .requestMatchers("/admins/**").hasRole("ADMIN") // outros métodos
                         
                         //Restaurante
