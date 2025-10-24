@@ -63,6 +63,47 @@ public class AdmRestauranteService {
     }
 
     @Transactional
+    public void solicitarAlteracaoEmail(String novoEmail) {
+        try {
+            if (admRepository.findByEmail(novoEmail).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Não há alteração, o e-mail é o mesmo.");
+            }
+            String codigo = verificaEmailService.gerarESalvarCodigo(novoEmail);
+            String subject = "Meal4You - Confirmação de Alteração de E-mail";
+            String body = "Olá! Use este código para confirmar a alteração do seu e-mail: " + codigo;
+            emailCodeSenderService.enviarEmail(novoEmail, subject, body);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao solicitar alteração de e-mail: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public AdmRestauranteResponseDTO atualizarEmail(String novoEmail, String codigoVerificacao) {
+        try {
+            String emailLogado = getAdmLogadoEmail();
+            AdmRestaurante adm = admRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado."));
+
+            if (!verificaEmailService.validarCodigo(novoEmail, codigoVerificacao)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
+            }
+
+            tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
+            adm.setEmail(novoEmail);
+            admRepository.save(adm);
+            return AdmRestauranteMapper.toResponse(adm);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao atualizar e-mail: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
     public AdmRestauranteResponseDTO cadastrarAdm(AdmRestauranteRequestDTO dto) {
         try {
             if (!verificaEmailService.validarCodigo(dto.getEmail(), dto.getCodigoVerificacao())) {
@@ -112,12 +153,6 @@ public class AdmRestauranteService {
 
             if (dto.getNome() != null && !dto.getNome().isBlank() && !dto.getNome().equals(adm.getNome())) {
                 adm.setNome(dto.getNome());
-                alterado = true;
-            }
-
-            if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(adm.getEmail())) {
-                tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
-                adm.setEmail(dto.getEmail());
                 alterado = true;
             }
 
