@@ -75,6 +75,47 @@ public class UsuarioService {
     }
 
     @Transactional
+    public void solicitarAlteracaoEmail(String novoEmail) {
+        try {
+            if (usuarioRepository.findByEmail(novoEmail).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Não há alteração, o e-mail é o mesmo.");
+            }
+            String codigo = verificaEmailService.gerarESalvarCodigo(novoEmail);
+            String subject = "Meal4You - Confirmação de Alteração de E-mail";
+            String body = "Olá! Use este código para confirmar a alteração do seu e-mail: " + codigo;
+            emailCodeSenderService.enviarEmail(novoEmail, subject, body);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao solicitar alteração de e-mail: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public UsuarioResponseDTO atualizarEmail(String novoEmail, String codigoVerificacao) {
+        try {
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+
+            if (!verificaEmailService.validarCodigo(novoEmail, codigoVerificacao)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
+            }
+
+            tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
+            usuario.setEmail(novoEmail);
+            usuarioRepository.save(usuario);
+            return UsuarioMapper.toResponse(usuario);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao atualizar e-mail: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
     public UsuarioResponseDTO cadastrarUsuario(UsuarioRequestDTO dto) {
         try {
             if (!verificaEmailService.validarCodigo(dto.getEmail(), dto.getCodigoVerificacao())) {
@@ -145,11 +186,6 @@ public class UsuarioService {
 
             if (dto.getNome() != null && !dto.getNome().isBlank() && !dto.getNome().equals(usuario.getNome())) {
                 usuario.setNome(dto.getNome());
-                alterado = true;
-            }
-            if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(usuario.getEmail())) {
-                tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
-                usuario.setEmail(dto.getEmail());
                 alterado = true;
             }
             if (dto.getSenha() != null && !dto.getSenha().isBlank()
