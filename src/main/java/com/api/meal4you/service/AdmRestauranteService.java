@@ -1,5 +1,7 @@
 package com.api.meal4you.service;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,9 +14,13 @@ import com.api.meal4you.dto.AdmRestauranteResponseDTO;
 import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
+import com.api.meal4you.entity.Ingrediente;
 import com.api.meal4you.mapper.AdmRestauranteMapper;
 import com.api.meal4you.mapper.LoginMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
+import com.api.meal4you.repository.IngredienteRepository;
+import com.api.meal4you.repository.IngredienteRestricaoRepository;
+import com.api.meal4you.repository.RestauranteRepository;
 import com.api.meal4you.security.JwtUtil;
 import com.api.meal4you.security.TokenStore;
 
@@ -29,6 +35,9 @@ public class AdmRestauranteService {
     private final TokenStore tokenStore;
     private final VerificaEmailService verificaEmailService;
     private final EmailCodeSenderService emailCodeSenderService;
+    private final RestauranteRepository restauranteRepository;
+    private final IngredienteRepository ingredienteRepository;
+    private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
 
     public String getAdmLogadoEmail() {
         try {
@@ -59,6 +68,47 @@ public class AdmRestauranteService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao enviar código de verificação: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public void solicitarAlteracaoEmail(String novoEmail) {
+        try {
+            if (admRepository.findByEmail(novoEmail).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Não há alteração, o e-mail é o mesmo.");
+            }
+            String codigo = verificaEmailService.gerarESalvarCodigo(novoEmail);
+            String subject = "Meal4You - Confirmação de Alteração de E-mail";
+            String body = "Olá! Use este código para confirmar a alteração do seu e-mail: " + codigo;
+            emailCodeSenderService.enviarEmail(novoEmail, subject, body);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao solicitar alteração de e-mail: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public AdmRestauranteResponseDTO atualizarEmail(String novoEmail, String codigoVerificacao) {
+        try {
+            String emailLogado = getAdmLogadoEmail();
+            AdmRestaurante adm = admRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado."));
+
+            if (!verificaEmailService.validarCodigo(novoEmail, codigoVerificacao)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
+            }
+
+            tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
+            adm.setEmail(novoEmail);
+            admRepository.save(adm);
+            return AdmRestauranteMapper.toResponse(adm);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao atualizar e-mail: " + ex.getMessage());
         }
     }
 
@@ -115,12 +165,6 @@ public class AdmRestauranteService {
                 alterado = true;
             }
 
-            if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(adm.getEmail())) {
-                tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
-                adm.setEmail(dto.getEmail());
-                alterado = true;
-            }
-
             if (dto.getSenha() != null && !dto.getSenha().isBlank()
                     && !encoder.matches(dto.getSenha(), adm.getSenha())) {
                 tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
@@ -153,13 +197,31 @@ public class AdmRestauranteService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
             }
 
+            restauranteRepository.findByAdmin(adm).ifPresent(restaurante -> {
+
+                List<Ingrediente> ingredientes = ingredienteRepository.findByAdmin(adm);
+                if(!ingredientes.isEmpty()) {
+                    ingredientes.forEach(ingredienteRestricaoRepository::deleteByIngrediente);
+                    ingredienteRepository.deleteAll(ingredientes);
+                }
+
+                // Todo: Deletar as refeições quando a funcionalidade existir (ALGO ASSIM)
+                // List<Refeicao> refeicoes = refeicaoRepository.findByRestaurante(restaurante);
+                // if(!refeicoes.isEmpty()) {
+                //     refeicoes.forEach(refeicaoIngredienteRepository::deleteByRefeicao);
+                //     refeicaoRepository.deleteAll(refeicoes); // Deleta "filhos"
+                // }
+
+                restauranteRepository.delete(restaurante);
+            });
+
             tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
             admRepository.delete(adm);
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Erro ao deletar administrador: " + ex.getMessage());
+                    "Erro ao deletar conta: " + ex.getMessage());
         }
     }
 
