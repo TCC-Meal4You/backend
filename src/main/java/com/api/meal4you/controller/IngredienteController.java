@@ -31,7 +31,7 @@ public class IngredienteController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarIngediente(@PathVariable int id) {
+    public ResponseEntity<Void> deletarIngrediente(@PathVariable int id) {
         ingredienteService.deletarIngrediente(id);
         return ResponseEntity.ok().build();
     }

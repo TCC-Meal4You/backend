@@ -3,9 +3,12 @@ package com.api.meal4you.service;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
+import com.api.meal4you.entity.Ingrediente;
 import com.api.meal4you.entity.Restaurante;
 import com.api.meal4you.mapper.RestauranteMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
+import com.api.meal4you.repository.IngredienteRepository;
+import com.api.meal4you.repository.IngredienteRestricaoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,8 @@ public class RestauranteService {
     private final RestauranteRepository restauranteRepository;
     private final AdmRestauranteRepository admRestauranteRepository;
     private final AdmRestauranteService admRestauranteService;
+    private final IngredienteRepository ingredienteRepository;
+    private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
 
     private void verificarRestauranteDoAdmLogado(Restaurante restaurante, String emailAdmLogado) {
         if (!restaurante.getAdmin().getEmail().equals(emailAdmLogado)) {
@@ -128,6 +133,8 @@ public class RestauranteService {
     public void deletarRestaurante(String nome, String localizacao) {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
+            AdmRestaurante admin = admRestauranteRepository.findByEmail(emailAdmLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
 
             Restaurante restaurante = restauranteRepository
                     .findByNomeAndLocalizacao(nome, localizacao)
@@ -136,6 +143,20 @@ public class RestauranteService {
                             "Não existe restaurante com nome '" + nome + "' e localização '" + localizacao + "'"));
 
             verificarRestauranteDoAdmLogado(restaurante, emailAdmLogado);
+
+            List<Ingrediente> ingredientes = ingredienteRepository.findByAdmin(admin);
+
+            if (!ingredientes.isEmpty()) {
+                ingredientes.forEach(ingredienteRestricaoRepository::deleteByIngrediente);
+                ingredienteRepository.deleteAll(ingredientes);
+            }
+
+            // Todo: Deletar as refeições quando a funcionalidade existir (ALGO ASSIM)
+            // List<Refeicao> refeicoes = refeicaoRepository.findByRestaurante(restaurante);
+            // if(!refeicoes.isEmpty()) {
+            //     refeicoes.forEach(refeicaoIngredienteRepository::deleteByRefeicao);
+            //     refeicaoRepository.deleteAll(refeicoes); // Deleta "filhos"
+            // }
 
             restauranteRepository.delete(restaurante);
 
