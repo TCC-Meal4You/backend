@@ -51,7 +51,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/restaurantes").hasRole("USUARIO") // listar
                         .requestMatchers(HttpMethod.POST, "/restaurantes").hasRole("ADMIN") // cadastrar
                         .requestMatchers(HttpMethod.PUT, "/restaurantes/{id}").hasRole("ADMIN") // atualizar
-                        .requestMatchers(HttpMethod.DELETE, "/restaurantes").hasRole("ADMIN") // deletar
+                        .requestMatchers(HttpMethod.DELETE, "/restaurantes/{id}").hasRole("ADMIN") // deletar
                         
                         //Ingredientes
                         .requestMatchers("/ingredientes/**").hasRole("ADMIN") // todos os métodos
