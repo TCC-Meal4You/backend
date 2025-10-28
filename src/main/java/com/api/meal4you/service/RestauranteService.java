@@ -43,7 +43,7 @@ public class RestauranteService {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
             AdmRestaurante adminExistente = admRestauranteRepository.findByEmail(emailAdmLogado)
                     .orElseThrow(
-                            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                            () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
             boolean existe = restauranteRepository.findByNomeAndLocalizacao(dto.getNome(), dto.getLocalizacao())
                     .isPresent();
@@ -134,7 +134,7 @@ public class RestauranteService {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
             AdmRestaurante admin = admRestauranteRepository.findByEmail(emailAdmLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
             Restaurante restaurante = restauranteRepository.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Restaurante não encontrado"));

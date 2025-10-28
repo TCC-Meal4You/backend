@@ -94,7 +94,7 @@ public class AdmRestauranteService {
         try {
             String emailLogado = getAdmLogadoEmail();
             AdmRestaurante adm = admRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado."));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
             if (!verificaEmailService.validarCodigo(novoEmail, codigoVerificacao)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
@@ -141,7 +141,7 @@ public class AdmRestauranteService {
         try {
             String emailLogado = getAdmLogadoEmail();
             AdmRestaurante adm = admRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
             return AdmRestauranteMapper.toResponse(adm);
         } catch (ResponseStatusException ex) {
             throw ex;
@@ -156,7 +156,7 @@ public class AdmRestauranteService {
         try {
             String emailLogado = getAdmLogadoEmail();
             AdmRestaurante adm = admRepository.findByEmail(emailLogado)                    
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
             boolean alterado = false;
 
@@ -191,7 +191,7 @@ public class AdmRestauranteService {
         try {
             String emailLogado = getAdmLogadoEmail();
             AdmRestaurante adm = admRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
             if (!encoder.matches(senha, adm.getSenha())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");

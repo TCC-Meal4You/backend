@@ -97,7 +97,7 @@ public class UsuarioService {
         try {
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
             if (!verificaEmailService.validarCodigo(novoEmail, codigoVerificacao)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
@@ -143,7 +143,7 @@ public class UsuarioService {
         try {
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
             return UsuarioMapper.toResponse(usuario);
         } catch (ResponseStatusException ex) {
             throw ex;
@@ -158,7 +158,7 @@ public class UsuarioService {
         try {
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
             if (!encoder.matches(senha, usuario.getSenha())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
@@ -180,7 +180,7 @@ public class UsuarioService {
         try {
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
             boolean alterado = false;
 
@@ -214,7 +214,7 @@ public class UsuarioService {
         try {
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
             usuarioRestricaoRepository.deleteByUsuario(usuario);
 
