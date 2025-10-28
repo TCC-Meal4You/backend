@@ -35,9 +35,9 @@ public class RestauranteController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> deletarRestaurantes(@RequestParam String nome, @RequestParam String localizacao) {
-        restauranteService.deletarRestaurante(nome, localizacao);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarRestaurantes(@PathVariable int id, @RequestParam String nomeConfirmacao) {
+        restauranteService.deletarRestaurante(id, nomeConfirmacao);
         return ResponseEntity.ok().build();
     }
 

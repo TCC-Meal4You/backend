@@ -3,6 +3,7 @@ package com.api.meal4you.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -43,10 +44,13 @@ public class Usuario {
     @Email
     private String email;
     
-    @NotBlank
     @Size(min = 6, max = 60)
     @Column(length = 60)
     private String senha;
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<SocialLogin> socialLogins = new ArrayList<>();
 
     @OneToMany(mappedBy = "usuario")
     @Builder.Default

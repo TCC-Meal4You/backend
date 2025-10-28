@@ -43,7 +43,7 @@ public class RestauranteService {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
             AdmRestaurante adminExistente = admRestauranteRepository.findByEmail(emailAdmLogado)
                     .orElseThrow(
-                            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                            () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
             boolean existe = restauranteRepository.findByNomeAndLocalizacao(dto.getNome(), dto.getLocalizacao())
                     .isPresent();
@@ -130,22 +130,22 @@ public class RestauranteService {
     }
 
     @Transactional
-    public void deletarRestaurante(String nome, String localizacao) {
+    public void deletarRestaurante(int id,String nomeConfirmacao) {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
             AdmRestaurante admin = admRestauranteRepository.findByEmail(emailAdmLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
-            Restaurante restaurante = restauranteRepository
-                    .findByNomeAndLocalizacao(nome, localizacao)
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "Não existe restaurante com nome '" + nome + "' e localização '" + localizacao + "'"));
+            Restaurante restaurante = restauranteRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Restaurante não encontrado"));
 
             verificarRestauranteDoAdmLogado(restaurante, emailAdmLogado);
 
-            List<Ingrediente> ingredientes = ingredienteRepository.findByAdmin(admin);
+            if (!restaurante.getNome().equals(nomeConfirmacao)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome de confirmação do restaurante incorreto.");
+            }
 
+            List<Ingrediente> ingredientes = ingredienteRepository.findByAdmin(admin);
             if (!ingredientes.isEmpty()) {
                 ingredientes.forEach(ingredienteRestricaoRepository::deleteByIngrediente);
                 ingredienteRepository.deleteAll(ingredientes);

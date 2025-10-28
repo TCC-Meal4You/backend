@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "senha.secreta.sincronizacao",
+      "type": "java.lang.String",
+      "description": "Senha secreta para acionar endpoints de administracao."
+    },
+    {
+      "name": "gemini.api.key",
+      "type": "java.lang.String",
+      "description": "Chave API do Gemini para trazer as restricoes alimentares."
+    }
+  ]
+}

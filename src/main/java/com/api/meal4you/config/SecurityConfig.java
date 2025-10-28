@@ -37,6 +37,7 @@ public class SecurityConfig {
 
                         //Usuario
                         .requestMatchers(HttpMethod.POST, "/usuarios/login").permitAll() // login
+                        .requestMatchers(HttpMethod.POST, "/usuarios/login/oauth2/google").permitAll() // login social
                         .requestMatchers(HttpMethod.POST, "/usuarios").permitAll() // cadastro
                         .requestMatchers(HttpMethod.POST, "/usuarios/verifica-email").permitAll() // verifica email
                         .requestMatchers("/usuarios/**").hasRole("USUARIO") // outros métodos
@@ -51,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/restaurantes").hasRole("USUARIO") // listar
                         .requestMatchers(HttpMethod.POST, "/restaurantes").hasRole("ADMIN") // cadastrar
                         .requestMatchers(HttpMethod.PUT, "/restaurantes/{id}").hasRole("ADMIN") // atualizar
-                        .requestMatchers(HttpMethod.DELETE, "/restaurantes").hasRole("ADMIN") // deletar
+                        .requestMatchers(HttpMethod.DELETE, "/restaurantes/{id}").hasRole("ADMIN") // deletar
                         
                         //Ingredientes
                         .requestMatchers("/ingredientes/**").hasRole("ADMIN") // todos os métodos
@@ -61,6 +62,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/restricoes/sincronizar").permitAll() // sincronizar IA
 
                         .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> {})
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

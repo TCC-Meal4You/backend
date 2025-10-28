@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.api.meal4you.dto.AtualizarEmailRequestDTO;
+import com.api.meal4you.dto.GoogleLoginRequestDTO;
 import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.dto.UsuarioRequestDTO;
@@ -83,6 +84,13 @@ public class UsuarioController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
         LoginResponseDTO response = usuarioService.fazerLogin(dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/login/oauth2/google")
+    public ResponseEntity<LoginResponseDTO> fazerloginComGoogle(@RequestBody GoogleLoginRequestDTO body) {
+        String idToken = body.getIdToken();
+        LoginResponseDTO response = usuarioService.fazerLoginComGoogle(idToken);
         return ResponseEntity.ok(response);
     }
 

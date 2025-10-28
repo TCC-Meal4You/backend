@@ -38,10 +38,10 @@ public class IngredienteService {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
             AdmRestaurante adminExistente = admRestauranteRepository.findByEmail(emailAdmLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
             if (restauranteRepository.findByAdmin(adminExistente).isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Você precisa cadastrar um restaurante para ter ingredientes.");
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Você precisa cadastrar um restaurante para ter ingredientes.");
             }
 
             if (ingredienteRepository.existsByNomeAndAdmin(dto.getNome(), adminExistente)) {
@@ -85,10 +85,10 @@ public class IngredienteService {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
             AdmRestaurante adminExistente = admRestauranteRepository.findByEmail(emailAdmLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
             if (restauranteRepository.findByAdmin(adminExistente).isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Você precisa cadastrar um restaurante para ter ingredientes.");
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Você precisa cadastrar um restaurante para ter ingredientes.");
             }
 
             List<Ingrediente> ingredientes = ingredienteRepository.findByAdmin(adminExistente);
@@ -106,7 +106,7 @@ public class IngredienteService {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
             AdmRestaurante adminExistente = admRestauranteRepository.findByEmail(emailAdmLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
             Ingrediente ingrediente = ingredienteRepository.findByIdIngredienteAndAdmin(id, adminExistente)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ingrediente não encontrado ou não pertence a você."));

@@ -16,6 +16,7 @@ import com.api.meal4you.dto.UsuarioRequestDTO;
 import com.api.meal4you.dto.UsuarioResponseDTO;
 import com.api.meal4you.dto.UsuarioRestricaoRequestDTO;
 import com.api.meal4you.entity.Restricao;
+import com.api.meal4you.entity.SocialLogin;
 import com.api.meal4you.entity.Usuario;
 import com.api.meal4you.entity.UsuarioRestricao;
 import com.api.meal4you.mapper.LoginMapper;
@@ -40,6 +41,7 @@ public class UsuarioService {
     private final TokenStore tokenStore;
     private final VerificaEmailService verificaEmailService;
     private final EmailCodeSenderService emailCodeSenderService;
+    private final GooglePeopleApiService googlePeopleApiService;
 
     public String getUsuarioLogadoEmail() {
         try {
@@ -80,6 +82,15 @@ public class UsuarioService {
             if (usuarioRepository.findByEmail(novoEmail).isPresent()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Não há alteração, o e-mail é o mesmo.");
             }
+
+            String emailLogado = getUsuarioLogadoEmail(); // Pega e-mail do usuário logado
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado) // Pega o "objeto" do usuário logado
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            if (usuario.getSenha() == null || usuario.getSenha().isBlank()) { // <--- Isso serve para bloquear a alteração de e-mail para usuários que logam via social login (ou seja, sem senha cadastrada no banco)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário criado via social login. Não pode alterar e-mail.");
+            }
+
             String codigo = verificaEmailService.gerarESalvarCodigo(novoEmail);
             String subject = "Meal4You - Confirmação de Alteração de E-mail";
             String body = "Olá! Use este código para confirmar a alteração do seu e-mail: " + codigo;
@@ -89,29 +100,6 @@ public class UsuarioService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao solicitar alteração de e-mail: " + ex.getMessage());
-        }
-    }
-
-    @Transactional
-    public UsuarioResponseDTO atualizarEmail(String novoEmail, String codigoVerificacao) {
-        try {
-            String emailLogado = getUsuarioLogadoEmail();
-            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
-
-            if (!verificaEmailService.validarCodigo(novoEmail, codigoVerificacao)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
-            }
-
-            tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
-            usuario.setEmail(novoEmail);
-            usuarioRepository.save(usuario);
-            return UsuarioMapper.toResponse(usuario);
-        } catch (ResponseStatusException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Erro ao atualizar e-mail: " + ex.getMessage());
         }
     }
 
@@ -143,7 +131,7 @@ public class UsuarioService {
         try {
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
             return UsuarioMapper.toResponse(usuario);
         } catch (ResponseStatusException ex) {
             throw ex;
@@ -158,7 +146,7 @@ public class UsuarioService {
         try {
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
             if (!encoder.matches(senha, usuario.getSenha())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
@@ -176,11 +164,34 @@ public class UsuarioService {
     }
 
     @Transactional
+    public UsuarioResponseDTO atualizarEmail(String novoEmail, String codigoVerificacao) {
+        try {
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            if (!verificaEmailService.validarCodigo(novoEmail, codigoVerificacao)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
+            }
+
+            tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
+            usuario.setEmail(novoEmail);
+            usuarioRepository.save(usuario);
+            return UsuarioMapper.toResponse(usuario);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao atualizar e-mail: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
     public UsuarioResponseDTO atualizarMeuPerfil(UsuarioRequestDTO dto) {
         try {
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
             boolean alterado = false;
 
@@ -188,11 +199,16 @@ public class UsuarioService {
                 usuario.setNome(dto.getNome());
                 alterado = true;
             }
-            if (dto.getSenha() != null && !dto.getSenha().isBlank()
-                    && !encoder.matches(dto.getSenha(), usuario.getSenha())) {
-                tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
-                usuario.setSenha(encoder.encode(dto.getSenha()));
-                alterado = true;
+            if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
+                
+                if (usuario.getSenha() == null || usuario.getSenha().isBlank()) { // <--- Isso bloqueia a alteração de senha se o usuário não tem senha cadastrada (criou conta via social login)
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário criado via social login. Não pode definir senha.");
+                }
+                if (!encoder.matches(dto.getSenha(), usuario.getSenha())) {
+                    tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
+                    usuario.setSenha(encoder.encode(dto.getSenha()));
+                    alterado = true;
+                }
             }
 
             if (!alterado) {
@@ -214,7 +230,7 @@ public class UsuarioService {
         try {
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
             usuarioRestricaoRepository.deleteByUsuario(usuario);
 
@@ -248,6 +264,59 @@ public class UsuarioService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao atualizar as restrições do usuário: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public LoginResponseDTO fazerLoginComGoogle(String idToken) {
+        try {
+            // 1. Obter dados do usuário Google
+            GooglePeopleApiService.GoogleUserInfo googleUser = googlePeopleApiService.getUserInfo(idToken);
+            String email = googleUser.getEmail();
+            String nome = googleUser.getName();
+            String googleId = googleUser.getId();
+
+            // 2. Verificar se já existe usuário com esse e-mail
+            Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+            if (usuario == null) {
+                // 3. Se não existe, criar novo usuário e associar SocialLogin
+                usuario = new Usuario();
+                usuario.setNome(nome);
+                usuario.setEmail(email);
+                usuario.setSenha(null); // Não tem senha
+                usuario = usuarioRepository.save(usuario);
+
+                // Criar e associar SocialLogin
+                SocialLogin socialLogin = SocialLogin.builder()
+                        .usuario(usuario)
+                        .provider("google")
+                        .providerId(googleId)
+                        .build();
+                usuario.getSocialLogins().add(socialLogin);
+            } else {
+                // 4. Se já existe, garantir que o SocialLogin está associado
+                boolean hasGoogle = usuario.getSocialLogins().stream()
+                        .anyMatch(sl -> "google".equals(sl.getProvider()) && googleId.equals(sl.getProviderId()));
+                if (!hasGoogle) {
+                    SocialLogin socialLogin = SocialLogin.builder()
+                            .usuario(usuario)
+                            .provider("google")
+                            .providerId(googleId)
+                            .build();
+                    usuario.getSocialLogins().add(socialLogin);
+                }
+            }
+            usuarioRepository.save(usuario);
+
+            // 5. Gerar token JWT e retornar
+            String token = jwtUtil.gerarToken(usuario.getEmail(), "USUARIO");
+            tokenStore.salvarToken(token);
+            return LoginMapper.toResponse(usuario, token);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao fazer login com Google: " + ex.getMessage());
         }
     }
 
