@@ -1,5 +1,6 @@
 package com.api.meal4you.entity;
 
+import java.util.ArrayList;
 import java.util.List;   
 
 import jakarta.persistence.Column;
@@ -35,7 +36,7 @@ public class Ingrediente {
 
     @NotBlank
     @Size(min = 3, max = 150)
-    @Column(length = 150, unique = true)
+    @Column(length = 150)
     private String nome;
 
     @NotNull
@@ -44,8 +45,10 @@ public class Ingrediente {
     private AdmRestaurante admin;
 
     @OneToMany(mappedBy = "ingrediente")
-    private List<RefeicaoIngrediente> refeicaoIngredientes;
+    @Builder.Default
+    private List<RefeicaoIngrediente> refeicaoIngredientes = new ArrayList<>();
 
     @OneToMany(mappedBy = "ingrediente")
-    private List<IngredienteRestricao> restricoes;
+    @Builder.Default
+    private List<IngredienteRestricao> restricoes = new ArrayList<>();
 }

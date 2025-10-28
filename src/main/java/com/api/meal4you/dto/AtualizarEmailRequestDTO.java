@@ -11,12 +11,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AdmRestauranteRequestDTO {
-    private String nome;
+public class AtualizarEmailRequestDTO {
 
     private String email;
-
-    private String senha;
 
     private String codigoVerificacao;
     

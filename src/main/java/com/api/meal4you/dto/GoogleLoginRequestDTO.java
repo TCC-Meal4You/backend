@@ -11,13 +11,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AdmRestauranteRequestDTO {
-    private String nome;
+public class GoogleLoginRequestDTO {
 
-    private String email;
+    private String idToken;
 
-    private String senha;
-
-    private String codigoVerificacao;
-    
 }
