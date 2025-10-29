@@ -62,5 +62,3 @@ public class VerificaEmailService {
         return String.valueOf(numeroAleatorio);
     }
 }
-
-
