@@ -3,15 +3,19 @@ package com.api.meal4you.service;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
+import com.api.meal4you.entity.Ingrediente;
 import com.api.meal4you.entity.Restaurante;
 import com.api.meal4you.mapper.RestauranteMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
+import com.api.meal4you.repository.IngredienteRepository;
+import com.api.meal4you.repository.IngredienteRestricaoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -23,6 +27,8 @@ public class RestauranteService {
     private final RestauranteRepository restauranteRepository;
     private final AdmRestauranteRepository admRestauranteRepository;
     private final AdmRestauranteService admRestauranteService;
+    private final IngredienteRepository ingredienteRepository;
+    private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
 
     private void verificarRestauranteDoAdmLogado(Restaurante restaurante, String emailAdmLogado) {
         if (!restaurante.getAdmin().getEmail().equals(emailAdmLogado)) {
@@ -37,7 +43,7 @@ public class RestauranteService {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
             AdmRestaurante adminExistente = admRestauranteRepository.findByEmail(emailAdmLogado)
                     .orElseThrow(
-                            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+                            () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
             boolean existe = restauranteRepository.findByNomeAndLocalizacao(dto.getNome(), dto.getLocalizacao())
                     .isPresent();
@@ -124,17 +130,33 @@ public class RestauranteService {
     }
 
     @Transactional
-    public void deletarRestaurante(String nome, String localizacao) {
+    public void deletarRestaurante(int id,String nomeConfirmacao) {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
+            AdmRestaurante admin = admRestauranteRepository.findByEmail(emailAdmLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
-            Restaurante restaurante = restauranteRepository
-                    .findByNomeAndLocalizacao(nome, localizacao)
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "Não existe restaurante com nome '" + nome + "' e localização '" + localizacao + "'"));
+            Restaurante restaurante = restauranteRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Restaurante não encontrado"));
 
             verificarRestauranteDoAdmLogado(restaurante, emailAdmLogado);
+
+            if (!restaurante.getNome().equals(nomeConfirmacao)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome de confirmação do restaurante incorreto.");
+            }
+
+            List<Ingrediente> ingredientes = ingredienteRepository.findByAdmin(admin);
+            if (!ingredientes.isEmpty()) {
+                ingredientes.forEach(ingredienteRestricaoRepository::deleteByIngrediente);
+                ingredienteRepository.deleteAll(ingredientes);
+            }
+
+            // Todo: Deletar as refeições quando a funcionalidade existir (ALGO ASSIM)
+            // List<Refeicao> refeicoes = refeicaoRepository.findByRestaurante(restaurante);
+            // if(!refeicoes.isEmpty()) {
+            //     refeicoes.forEach(refeicaoIngredienteRepository::deleteByRefeicao);
+            //     refeicaoRepository.deleteAll(refeicoes); // Deleta "filhos"
+            // }
 
             restauranteRepository.delete(restaurante);
 
@@ -143,6 +165,29 @@ public class RestauranteService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao deletar restaurante: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public RestauranteResponseDTO buscarMeuRestaurante() {
+        try {
+            String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
+
+            AdmRestaurante admin = admRestauranteRepository.findByEmail(emailAdmLogado)
+                    .orElseThrow(
+                            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado"));
+
+            Restaurante restaurante = restauranteRepository.findByAdmin(admin)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Restaurante não encontrado. Cadastre primeiro"));
+
+            return RestauranteMapper.toResponse(restaurante);
+
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao buscar restaurante: " + ex.getMessage());
         }
     }
 }

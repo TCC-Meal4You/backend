@@ -16,7 +16,7 @@ import com.api.meal4you.entity.Restricao;
 import com.api.meal4you.mapper.RestricaoMapper;
 import com.api.meal4you.repository.RestricaoRepository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -41,6 +41,7 @@ public class RestricaoService {
     }
 
     // Para o Controller (com senha)
+    @Transactional
     public String sincronizarComIA(SincronizacaoRequestDTO dto) {
         try {
             if (dto.getSenha() == null || !dto.getSenha().equals(senhaSecreta)) {
@@ -53,11 +54,11 @@ public class RestricaoService {
     }
 
     // Para o Robô Scheduler(sem senha)
+    @Transactional
     public String sincronizarComIA() {
         return executarLogicaDeSincronizacao();
     }
 
-    @Transactional
     private String executarLogicaDeSincronizacao() {
 
         Set<String> tiposExistentes = restricaoRepository.findAll()

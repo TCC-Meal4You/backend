@@ -10,7 +10,6 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 @RestController
 @RequestMapping("/restaurantes")
 @RequiredArgsConstructor
@@ -25,7 +24,7 @@ public class RestauranteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RestauranteResponseDTO>> listarRestaurantes(){
+    public ResponseEntity<List<RestauranteResponseDTO>> listarRestaurantes() {
         List<RestauranteResponseDTO> response = restauranteService.listarTodos();
         return ResponseEntity.ok(response);
     }
@@ -36,9 +35,16 @@ public class RestauranteController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> excluirRestaurantes(@RequestParam String nome, @RequestParam String localizacao) {
-        restauranteService.deletarRestaurante(nome, localizacao);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarRestaurantes(@PathVariable int id, @RequestParam String nomeConfirmacao) {
+        restauranteService.deletarRestaurante(id, nomeConfirmacao);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/meu-restaurante")
+    public ResponseEntity<RestauranteResponseDTO> buscarMeuRestaurante() {
+        RestauranteResponseDTO response = restauranteService.buscarMeuRestaurante();
+        return ResponseEntity.ok(response);
+    }
+    
 }
