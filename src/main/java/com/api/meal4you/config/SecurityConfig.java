@@ -50,10 +50,15 @@ public class SecurityConfig {
                         
                         //Restaurante
                         .requestMatchers(HttpMethod.GET, "/restaurantes").hasRole("USUARIO") // listar
+                        .requestMatchers(HttpMethod.GET, "/restaurantes/listar-por-id/{id}").hasRole("USUARIO") // listar por id
                         .requestMatchers(HttpMethod.POST, "/restaurantes").hasRole("ADMIN") // cadastrar
                         .requestMatchers(HttpMethod.PUT, "/restaurantes/{id}").hasRole("ADMIN") // atualizar
                         .requestMatchers(HttpMethod.DELETE, "/restaurantes/{id}").hasRole("ADMIN") // deletar
-                        
+                        .requestMatchers(HttpMethod.GET, "/restaurantes/meu-restaurante").hasRole("ADMIN") // meu restaurante
+
+                        //Refeições
+                        .requestMatchers("/refeicoes/**").hasRole("ADMIN") // todos os métodos
+
                         //Ingredientes
                         .requestMatchers("/ingredientes/**").hasRole("ADMIN") // todos os métodos
 

@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -20,6 +21,7 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(name = "refeicao_ingrediente")
+@IdClass(RefeicaoIngredienteId.class)
 public class RefeicaoIngrediente implements Serializable {
 
     @Id

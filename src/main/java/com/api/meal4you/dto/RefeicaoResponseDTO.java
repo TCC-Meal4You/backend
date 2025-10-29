@@ -12,13 +12,15 @@ import lombok.*;
 public class RefeicaoResponseDTO {
     private int idRefeicao;
 
+    private String nome;
+
     private String descricao;
 
     private BigDecimal preco;
 
     private String tipo;
 
-    private String disponivel;
+    private Boolean disponivel;
 
     private List<IngredienteResumoResponseDTO> ingrediente;
 
