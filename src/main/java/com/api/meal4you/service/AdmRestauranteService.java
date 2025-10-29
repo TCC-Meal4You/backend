@@ -15,11 +15,14 @@ import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Ingrediente;
+import com.api.meal4you.entity.Refeicao;
 import com.api.meal4you.mapper.AdmRestauranteMapper;
 import com.api.meal4you.mapper.LoginMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 import com.api.meal4you.repository.IngredienteRepository;
 import com.api.meal4you.repository.IngredienteRestricaoRepository;
+import com.api.meal4you.repository.RefeicaoIngredienteRepository;
+import com.api.meal4you.repository.RefeicaoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 import com.api.meal4you.security.JwtUtil;
 import com.api.meal4you.security.TokenStore;
@@ -38,6 +41,8 @@ public class AdmRestauranteService {
     private final RestauranteRepository restauranteRepository;
     private final IngredienteRepository ingredienteRepository;
     private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
+    private final RefeicaoRepository refeicaoRepository;
+    private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
 
     public String getAdmLogadoEmail() {
         try {
@@ -199,18 +204,17 @@ public class AdmRestauranteService {
 
             restauranteRepository.findByAdmin(adm).ifPresent(restaurante -> {
 
+                List<Refeicao> refeicoes = refeicaoRepository.findByRestaurante(restaurante);
+                if(!refeicoes.isEmpty()) {
+                    refeicoes.forEach(refeicaoIngredienteRepository::deleteByRefeicao);
+                    refeicaoRepository.deleteAll(refeicoes);
+                }
+
                 List<Ingrediente> ingredientes = ingredienteRepository.findByAdmin(adm);
                 if(!ingredientes.isEmpty()) {
                     ingredientes.forEach(ingredienteRestricaoRepository::deleteByIngrediente);
                     ingredienteRepository.deleteAll(ingredientes);
                 }
-
-                // Todo: Deletar as refeições quando a funcionalidade existir (ALGO ASSIM)
-                // List<Refeicao> refeicoes = refeicaoRepository.findByRestaurante(restaurante);
-                // if(!refeicoes.isEmpty()) {
-                //     refeicoes.forEach(refeicaoIngredienteRepository::deleteByRefeicao);
-                //     refeicaoRepository.deleteAll(refeicoes); // Deleta "filhos"
-                // }
 
                 restauranteRepository.delete(restaurante);
             });

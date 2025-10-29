@@ -12,6 +12,7 @@ import com.api.meal4you.repository.IngredienteRepository;
 import com.api.meal4you.repository.IngredienteRestricaoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 import com.api.meal4you.repository.RestricaoRepository;
+import com.api.meal4you.repository.RefeicaoIngredienteRepository; 
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +34,7 @@ public class IngredienteService {
     private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
     private final RestricaoRepository restricaoRepository;
     private final RestauranteRepository restauranteRepository;
+    private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
 
     @Transactional
     public IngredienteResponseDTO cadastrarIngrediente(IngredienteRequestDTO dto) {
@@ -48,18 +51,22 @@ public class IngredienteService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Você já cadastrou um ingrediente com este nome.");
             }
 
+            List<Restricao> restricoesValidadas = new ArrayList<>(); // Inicializa uma lista vazia
+            
+            if (dto.getRestricoesIds() != null && !dto.getRestricoesIds().isEmpty()) {
+                restricoesValidadas = restricaoRepository.findAllById(dto.getRestricoesIds());
+                
+                if (restricoesValidadas.size() != dto.getRestricoesIds().size()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Um ou mais IDs de restrição são inválidos.");
+                }
+            }
+
             Ingrediente novoIngrediente = IngredienteMapper.toEntity(dto);
             novoIngrediente.setAdmin(adminExistente);
             ingredienteRepository.save(novoIngrediente);
 
-            if (dto.getRestricoesIds() != null && !dto.getRestricoesIds().isEmpty()) {
-                List<Restricao> restricoes = restricaoRepository.findAllById(dto.getRestricoesIds());
-                
-                if (restricoes.size() != dto.getRestricoesIds().size()) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Um ou mais IDs de restrição são inválidos.");
-                }
-
-                List<IngredienteRestricao> associacoes = restricoes.stream()
+            if (!restricoesValidadas.isEmpty()) {
+                List<IngredienteRestricao> associacoes = restricoesValidadas.stream()
                         .map(restricao -> IngredienteRestricao.builder()
                                 .ingrediente(novoIngrediente)
                                 .restricao(restricao)
@@ -67,7 +74,7 @@ public class IngredienteService {
                         .collect(Collectors.toList());
                 
                 ingredienteRestricaoRepository.saveAll(associacoes);
-                novoIngrediente.setRestricoes(associacoes); 
+                novoIngrediente.setRestricoes(associacoes);
             }
 
             return IngredienteMapper.toResponse(novoIngrediente);
@@ -110,6 +117,10 @@ public class IngredienteService {
 
             Ingrediente ingrediente = ingredienteRepository.findByIdIngredienteAndAdmin(id, adminExistente)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ingrediente não encontrado ou não pertence a você."));
+
+            if (refeicaoIngredienteRepository.existsByIngrediente(ingrediente)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Este ingrediente não pode ser deletado pois está em uso em uma ou mais refeições.");
+            }
 
             ingredienteRestricaoRepository.deleteByIngrediente(ingrediente);
 
