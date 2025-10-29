@@ -1,5 +1,6 @@
 package com.api.meal4you.controller;
 
+import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.service.RestauranteService;
@@ -9,6 +10,8 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/restaurantes")
@@ -46,5 +49,10 @@ public class RestauranteController {
         RestauranteResponseDTO response = restauranteService.buscarMeuRestaurante();
         return ResponseEntity.ok(response);
     }
-    
+
+    @GetMapping("/listar-por-id/{id}")
+    public ResponseEntity<RestaurantePorIdResponseDTO> listarPorId(@PathVariable int id, @RequestParam Integer numPagina) {
+        RestaurantePorIdResponseDTO response = restauranteService.listarPorId(id, numPagina);
+        return ResponseEntity.ok(response);
+    }
 }
