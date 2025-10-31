@@ -9,6 +9,11 @@
       "name": "gemini.api.key",
       "type": "java.lang.String",
       "description": "Chave API do Gemini para trazer as restricoes alimentares."
+    },
+    {
+      "name": "sendgrid.api.key",
+      "type": "java.lang.String",
+      "description": "Chave API do SendGrid para envio de e-mails."
     }
   ]
 }

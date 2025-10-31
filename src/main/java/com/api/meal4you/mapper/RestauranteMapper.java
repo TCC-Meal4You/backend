@@ -3,9 +3,11 @@ package com.api.meal4you.mapper;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
+import com.api.meal4you.entity.Refeicao;
 import com.api.meal4you.entity.Restaurante;
 
 public class RestauranteMapper {
@@ -38,5 +40,18 @@ public class RestauranteMapper {
         return restaurantes.stream()
                 .map(RestauranteMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    public static RestaurantePorIdResponseDTO toPorIdResponse(Restaurante restaurante, List<Refeicao> refeicoes, int totalPaginas) {
+        return RestaurantePorIdResponseDTO.builder()
+                .idRestaurante(restaurante.getIdRestaurante())
+                .nome(restaurante.getNome())
+                .localizacao(restaurante.getLocalizacao())
+                .descricao(restaurante.getDescricao())
+                .tipoComida(restaurante.getTipoComida())
+                .aberto(restaurante.isAberto())
+                .refeicoes(RefeicaoMapper.toResponseList(refeicoes))
+                .totalPaginas(totalPaginas)
+                .build();
     }
 }

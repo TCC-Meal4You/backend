@@ -1,14 +1,18 @@
 package com.api.meal4you.service;
 
+import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Ingrediente;
+import com.api.meal4you.entity.Refeicao;
 import com.api.meal4you.entity.Restaurante;
 import com.api.meal4you.mapper.RestauranteMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 import com.api.meal4you.repository.IngredienteRepository;
 import com.api.meal4you.repository.IngredienteRestricaoRepository;
+import com.api.meal4you.repository.RefeicaoIngredienteRepository;
+import com.api.meal4you.repository.RefeicaoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -19,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +34,8 @@ public class RestauranteService {
     private final AdmRestauranteService admRestauranteService;
     private final IngredienteRepository ingredienteRepository;
     private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
+    private final RefeicaoRepository refeicaoRepository;
+    private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
 
     private void verificarRestauranteDoAdmLogado(Restaurante restaurante, String emailAdmLogado) {
         if (!restaurante.getAdmin().getEmail().equals(emailAdmLogado)) {
@@ -42,8 +49,8 @@ public class RestauranteService {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
             AdmRestaurante adminExistente = admRestauranteRepository.findByEmail(emailAdmLogado)
-                    .orElseThrow(
-                            () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                            "Administrador não autenticado."));
 
             boolean existe = restauranteRepository.findByNomeAndLocalizacao(dto.getNome(), dto.getLocalizacao())
                     .isPresent();
@@ -130,19 +137,27 @@ public class RestauranteService {
     }
 
     @Transactional
-    public void deletarRestaurante(int id,String nomeConfirmacao) {
+    public void deletarRestaurante(int id, String nomeConfirmacao) {
         try {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
             AdmRestaurante admin = admRestauranteRepository.findByEmail(emailAdmLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                            "Administrador não autenticado."));
 
             Restaurante restaurante = restauranteRepository.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Restaurante não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado"));
 
             verificarRestauranteDoAdmLogado(restaurante, emailAdmLogado);
 
             if (!restaurante.getNome().equals(nomeConfirmacao)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome de confirmação do restaurante incorreto.");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Nome de confirmação do restaurante incorreto.");
+            }
+
+            List<Refeicao> refeicoes = refeicaoRepository.findByRestaurante(restaurante);
+            if (!refeicoes.isEmpty()) {
+                refeicoes.forEach(refeicaoIngredienteRepository::deleteByRefeicao);
+                refeicaoRepository.deleteAll(refeicoes);
             }
 
             List<Ingrediente> ingredientes = ingredienteRepository.findByAdmin(admin);
@@ -150,13 +165,6 @@ public class RestauranteService {
                 ingredientes.forEach(ingredienteRestricaoRepository::deleteByIngrediente);
                 ingredienteRepository.deleteAll(ingredientes);
             }
-
-            // Todo: Deletar as refeições quando a funcionalidade existir (ALGO ASSIM)
-            // List<Refeicao> refeicoes = refeicaoRepository.findByRestaurante(restaurante);
-            // if(!refeicoes.isEmpty()) {
-            //     refeicoes.forEach(refeicaoIngredienteRepository::deleteByRefeicao);
-            //     refeicaoRepository.deleteAll(refeicoes); // Deleta "filhos"
-            // }
 
             restauranteRepository.delete(restaurante);
 
@@ -188,6 +196,44 @@ public class RestauranteService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao buscar restaurante: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public RestaurantePorIdResponseDTO listarPorId(int id, Integer numPagina) {
+        try {
+            Restaurante restaurante = restauranteRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado"));
+
+            List<Refeicao> todasRefeicoes = refeicaoRepository.findByRestaurante(restaurante);
+
+            List<Refeicao> refeicoesDisponiveis = todasRefeicoes.stream()
+                    .filter(Refeicao::getDisponivel)
+                    .collect(Collectors.toList());
+
+            int tamanhoPagina = 10;
+            int pagina = (numPagina != null && numPagina > 0) ? numPagina : 1;
+            int inicio = (pagina - 1) * tamanhoPagina;
+            int fim = Math.min(inicio + tamanhoPagina, refeicoesDisponiveis.size());
+
+            int totalRefeicoesDisponiveis = refeicoesDisponiveis.size();
+
+            int totalPaginas = (int) Math.ceil((double) totalRefeicoesDisponiveis / tamanhoPagina);
+            if (totalPaginas == 0 && totalRefeicoesDisponiveis > 0) {
+                totalPaginas = 1;
+            } else if (totalRefeicoesDisponiveis == 0) {
+                totalPaginas = 0;
+            }
+
+            List<Refeicao> refeicoesPaginadas = refeicoesDisponiveis.subList(inicio, fim);
+
+            return RestauranteMapper.toPorIdResponse(restaurante, refeicoesPaginadas, totalPaginas);
+
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao buscar restaurante por ID: " + ex.getMessage());
         }
     }
 }

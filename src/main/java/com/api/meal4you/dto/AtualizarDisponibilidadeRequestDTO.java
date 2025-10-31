@@ -1,0 +1,13 @@
+package com.api.meal4you.dto;
+
+import lombok.*;
+
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AtualizarDisponibilidadeRequestDTO {
+    private Boolean disponivel;
+}
