@@ -1,6 +1,7 @@
 package com.api.meal4you.service;
 
 import java.util.List;
+import static java.util.regex.Pattern.matches;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import com.api.meal4you.entity.UsuarioRestricao;
 import com.api.meal4you.mapper.LoginMapper;
 import com.api.meal4you.mapper.UsuarioMapper;
 import com.api.meal4you.repository.RestricaoRepository;
+import com.api.meal4you.repository.SocialLoginRepository;
 import com.api.meal4you.repository.UsuarioRepository;
 import com.api.meal4you.repository.UsuarioRestricaoRepository;
 import com.api.meal4you.security.JwtUtil;
@@ -35,6 +37,7 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final RestricaoRepository restricaoRepository;
+    private final SocialLoginRepository socialLoginRepository;
     private final UsuarioRestricaoRepository usuarioRestricaoRepository;
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtil;
@@ -142,17 +145,18 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void deletarMinhaConta(String senha) {
+    public void deletarMinhaConta(String email) {
         try {
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
-            if (!encoder.matches(senha, usuario.getSenha())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
+            if (!matches(email, usuario.getEmail())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail incorreto");
             }
 
             tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
+            socialLoginRepository.deleteByUsuario(usuario);
             usuarioRestricaoRepository.deleteByUsuario(usuario);
             usuarioRepository.delete(usuario);
         } catch (ResponseStatusException ex) {
@@ -292,6 +296,7 @@ public class UsuarioService {
                         .provider("google")
                         .providerId(googleId)
                         .build();
+                socialLoginRepository.save(socialLogin);
                 usuario.getSocialLogins().add(socialLogin);
             } else {
                 // 4. Se já existe, garantir que o SocialLogin está associado
@@ -303,6 +308,7 @@ public class UsuarioService {
                             .provider("google")
                             .providerId(googleId)
                             .build();
+                    socialLoginRepository.save(socialLogin);
                     usuario.getSocialLogins().add(socialLogin);
                 }
             }
