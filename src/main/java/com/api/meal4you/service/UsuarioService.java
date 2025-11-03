@@ -151,7 +151,7 @@ public class UsuarioService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
             if (!email.equals(usuario.getEmail())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail de confirmação incorreto.");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail incorreto");
             }
 
             tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
