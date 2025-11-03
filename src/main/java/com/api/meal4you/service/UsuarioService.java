@@ -1,7 +1,6 @@
 package com.api.meal4you.service;
 
 import java.util.List;
-import static java.util.regex.Pattern.matches;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -151,7 +150,7 @@ public class UsuarioService {
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
-            if (!matches(email, usuario.getEmail())) {
+            if (!email.equals(usuario.getEmail())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail incorreto");
             }
 
