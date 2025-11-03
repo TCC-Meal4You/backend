@@ -70,8 +70,8 @@ public class UsuarioController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Map<String, String>> deletarMinhaConta(@RequestParam String senha) {
-        usuarioService.deletarMinhaConta(senha);
+    public ResponseEntity<Map<String, String>> deletarMinhaConta(@RequestParam String email) {
+        usuarioService.deletarMinhaConta(email);
         return ResponseEntity.ok(Map.of("mensagem", "Usuário deletado com sucesso."));
     }
 

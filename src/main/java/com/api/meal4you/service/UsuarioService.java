@@ -22,6 +22,7 @@ import com.api.meal4you.entity.UsuarioRestricao;
 import com.api.meal4you.mapper.LoginMapper;
 import com.api.meal4you.mapper.UsuarioMapper;
 import com.api.meal4you.repository.RestricaoRepository;
+import com.api.meal4you.repository.SocialLoginRepository;
 import com.api.meal4you.repository.UsuarioRepository;
 import com.api.meal4you.repository.UsuarioRestricaoRepository;
 import com.api.meal4you.security.JwtUtil;
@@ -35,6 +36,7 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final RestricaoRepository restricaoRepository;
+    private final SocialLoginRepository socialLoginRepository;
     private final UsuarioRestricaoRepository usuarioRestricaoRepository;
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtil;
@@ -142,17 +144,18 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void deletarMinhaConta(String senha) {
+    public void deletarMinhaConta(String email) {
         try {
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
-            if (!encoder.matches(senha, usuario.getSenha())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
+            if (!email.equals(usuario.getEmail())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail de confirmação incorreto.");
             }
 
             tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
+            socialLoginRepository.deleteByUsuario(usuario);
             usuarioRestricaoRepository.deleteByUsuario(usuario);
             usuarioRepository.delete(usuario);
         } catch (ResponseStatusException ex) {
@@ -289,9 +292,11 @@ public class UsuarioService {
                 // Criar e associar SocialLogin
                 SocialLogin socialLogin = SocialLogin.builder()
                         .usuario(usuario)
+                        .adm(null)
                         .provider("google")
                         .providerId(googleId)
                         .build();
+                socialLoginRepository.save(socialLogin);
                 usuario.getSocialLogins().add(socialLogin);
             } else {
                 // 4. Se já existe, garantir que o SocialLogin está associado
@@ -303,6 +308,7 @@ public class UsuarioService {
                             .provider("google")
                             .providerId(googleId)
                             .build();
+                    socialLoginRepository.save(socialLogin);
                     usuario.getSocialLogins().add(socialLogin);
                 }
             }
