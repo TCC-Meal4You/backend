@@ -31,8 +31,12 @@ public class SocialLogin {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "id_usuario", nullable = false)
+    @JoinColumn(name = "id_usuario", nullable = true)
     private Usuario usuario;
+
+    @ManyToOne
+    @JoinColumn(name = "id_adm", nullable = true)
+    private AdmRestaurante adm;
 
     @Column(nullable = false)
     private String provider; // "google", "facebook", etc.
