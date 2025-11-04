@@ -21,6 +21,7 @@ import com.api.meal4you.entity.Usuario;
 import com.api.meal4you.entity.UsuarioRestricao;
 import com.api.meal4you.mapper.LoginMapper;
 import com.api.meal4you.mapper.UsuarioMapper;
+import com.api.meal4you.repository.RestauranteFavoritoRepository;
 import com.api.meal4you.repository.RestricaoRepository;
 import com.api.meal4you.repository.SocialLoginRepository;
 import com.api.meal4you.repository.UsuarioRepository;
@@ -44,6 +45,7 @@ public class UsuarioService {
     private final VerificaEmailService verificaEmailService;
     private final EmailCodeSenderService emailCodeSenderService;
     private final GooglePeopleApiService googlePeopleApiService;
+    private final RestauranteFavoritoRepository restauranteFavoritoRepository;
 
     public String getUsuarioLogadoEmail() {
         try {
@@ -157,6 +159,7 @@ public class UsuarioService {
             tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
             socialLoginRepository.deleteByUsuario(usuario);
             usuarioRestricaoRepository.deleteByUsuario(usuario);
+            restauranteFavoritoRepository.deleteByUsuario(usuario);
             usuarioRepository.delete(usuario);
         } catch (ResponseStatusException ex) {
             throw ex;
