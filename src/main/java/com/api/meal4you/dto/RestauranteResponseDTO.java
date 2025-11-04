@@ -18,7 +18,7 @@ public class RestauranteResponseDTO {
 
     private String tipoComida;
 
-    private boolean aberto;
+    private boolean ativo;
 
     private String emailAdmin;
 

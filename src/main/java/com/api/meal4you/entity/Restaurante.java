@@ -56,7 +56,7 @@ public class Restaurante {
     private String tipoComida;
 
     @NotNull
-    private boolean aberto;
+    private boolean ativo;
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_admin", referencedColumnName = "idAdmin", nullable = false)

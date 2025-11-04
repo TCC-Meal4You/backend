@@ -1,57 +1,83 @@
 package com.api.meal4you.mapper;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Refeicao;
 import com.api.meal4you.entity.Restaurante;
+import com.api.meal4you.entity.RestauranteFavorito;
+import com.api.meal4you.entity.Usuario;
 
 public class RestauranteMapper {
     public static Restaurante toEntity(RestauranteRequestDTO dto, AdmRestaurante admin) {
         return Restaurante.builder()
-            .nome(dto.getNome())
-            .localizacao(dto.getLocalizacao())
-            .descricao(dto.getDescricao())
-            .tipoComida(dto.getTipoComida())
-            .aberto(dto.isAberto())
-            .admin(admin)
-            .build();
+                .nome(dto.getNome())
+                .localizacao(dto.getLocalizacao())
+                .descricao(dto.getDescricao())
+                .tipoComida(dto.getTipoComida())
+                .ativo(dto.isAtivo())
+                .admin(admin)
+                .build();
     }
 
     public static RestauranteResponseDTO toResponse(Restaurante restaurante) {
         AdmRestaurante admin = restaurante.getAdmin();
         return RestauranteResponseDTO.builder()
-            .idRestaurante(restaurante.getIdRestaurante())
-            .nome(restaurante.getNome())
-            .localizacao(restaurante.getLocalizacao())
-            .descricao(restaurante.getDescricao())
-            .tipoComida(restaurante.getTipoComida())
-            .aberto(restaurante.isAberto())
-            .emailAdmin(admin.getEmail())
-            .nomeAdmin(admin.getNome())
-            .build();
+                .idRestaurante(restaurante.getIdRestaurante())
+                .nome(restaurante.getNome())
+                .localizacao(restaurante.getLocalizacao())
+                .descricao(restaurante.getDescricao())
+                .tipoComida(restaurante.getTipoComida())
+                .ativo(restaurante.isAtivo())
+                .emailAdmin(admin.getEmail())
+                .nomeAdmin(admin.getNome())
+                .build();
     }
 
-        public static List<RestauranteResponseDTO> toResponseList(List<Restaurante> restaurantes) {
-        return restaurantes.stream()
-                .map(RestauranteMapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    public static RestaurantePorIdResponseDTO toPorIdResponse(Restaurante restaurante, List<Refeicao> refeicoes, int totalPaginas) {
+    public static RestaurantePorIdResponseDTO toPorIdResponse(Restaurante restaurante, List<Refeicao> refeicoes,
+            int totalPaginas, boolean isFavorito) {
         return RestaurantePorIdResponseDTO.builder()
                 .idRestaurante(restaurante.getIdRestaurante())
                 .nome(restaurante.getNome())
                 .localizacao(restaurante.getLocalizacao())
                 .descricao(restaurante.getDescricao())
                 .tipoComida(restaurante.getTipoComida())
-                .aberto(restaurante.isAberto())
                 .refeicoes(RefeicaoMapper.toResponseList(refeicoes))
                 .totalPaginas(totalPaginas)
+                .isFavorito(isFavorito)
                 .build();
+    }
+
+    public static RestauranteFavorito toEntity(Usuario usuario, Restaurante restaurante) {
+        return RestauranteFavorito.builder()
+                .usuario(usuario)
+                .restaurante(restaurante)
+                .build();
+    }
+
+    public static RestauranteFavoritoResponseDTO toUsuarioCardResponse(Restaurante restaurante, boolean isFavorito) {
+        return RestauranteFavoritoResponseDTO.builder()
+                .idRestaurante(restaurante.getIdRestaurante())
+                .nome(restaurante.getNome())
+                .localizacao(restaurante.getLocalizacao())
+                .descricao(restaurante.getDescricao())
+                .tipoComida(restaurante.getTipoComida())
+                .isFavorito(isFavorito) 
+                .build();
+    }
+
+    public static List<RestauranteFavoritoResponseDTO> toUsuarioCardResponseList(List<Restaurante> restaurantes, Set<Integer> idsFavoritados) {
+        return restaurantes.stream()
+                .map(restaurante -> {
+                    boolean isFav = idsFavoritados.contains(restaurante.getIdRestaurante());
+                    return RestauranteMapper.toUsuarioCardResponse(restaurante, isFav);
+                })
+                .collect(Collectors.toList());
     }
 }

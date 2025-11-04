@@ -1,7 +1,5 @@
 package com.api.meal4you.dto;
 
-import java.util.List;
-
 import lombok.*;
 
 @Getter
@@ -9,7 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RestaurantePorIdResponseDTO {
+public class RestauranteFavoritoResponseDTO {
     private int idRestaurante;
 
     private String nome;
@@ -21,9 +19,4 @@ public class RestaurantePorIdResponseDTO {
     private String tipoComida;
 
     private boolean isFavorito;
-
-    private int totalPaginas;
-    
-    List<RefeicaoResponseDTO> refeicoes;
-
 }

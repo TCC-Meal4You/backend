@@ -1,5 +1,6 @@
 package com.api.meal4you.service;
 
+import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
@@ -7,13 +8,17 @@ import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Ingrediente;
 import com.api.meal4you.entity.Refeicao;
 import com.api.meal4you.entity.Restaurante;
+import com.api.meal4you.entity.RestauranteFavorito;
+import com.api.meal4you.entity.Usuario;
 import com.api.meal4you.mapper.RestauranteMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 import com.api.meal4you.repository.IngredienteRepository;
 import com.api.meal4you.repository.IngredienteRestricaoRepository;
 import com.api.meal4you.repository.RefeicaoIngredienteRepository;
 import com.api.meal4you.repository.RefeicaoRepository;
+import com.api.meal4you.repository.RestauranteFavoritoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
+import com.api.meal4you.repository.UsuarioRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +43,9 @@ public class RestauranteService {
     private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
     private final RefeicaoRepository refeicaoRepository;
     private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
+    private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
+    private final RestauranteFavoritoRepository restauranteFavoritoRepository;
 
     private void verificarRestauranteDoAdmLogado(Restaurante restaurante, String emailAdmLogado) {
         if (!restaurante.getAdmin().getEmail().equals(emailAdmLogado)) {
@@ -72,10 +82,21 @@ public class RestauranteService {
     }
 
     @Transactional
-    public List<RestauranteResponseDTO> listarTodos() {
+    public List<RestauranteFavoritoResponseDTO> listarTodos() {
         try {
             List<Restaurante> restaurantes = restauranteRepository.findAll();
-            return RestauranteMapper.toResponseList(restaurantes);
+            
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+            
+            List<RestauranteFavorito> favoritos = restauranteFavoritoRepository.findByUsuario(usuario);
+            
+            Set<Integer> idsFavoritados = favoritos.stream()
+                    .map(fav -> fav.getRestaurante().getIdRestaurante())
+                    .collect(Collectors.toSet());
+            
+            return RestauranteMapper.toUsuarioCardResponseList(restaurantes, idsFavoritados);
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao listar restaurantes: " + ex.getMessage());
@@ -116,8 +137,8 @@ public class RestauranteService {
                 alterado = true;
             }
 
-            if (restaurante.isAberto() != dto.isAberto()) {
-                restaurante.setAberto(dto.isAberto());
+            if (restaurante.isAtivo() != dto.isAtivo()) {
+                restaurante.setAtivo(dto.isAtivo());
                 alterado = true;
             }
 
@@ -227,13 +248,71 @@ public class RestauranteService {
 
             List<Refeicao> refeicoesPaginadas = refeicoesDisponiveis.subList(inicio, fim);
 
-            return RestauranteMapper.toPorIdResponse(restaurante, refeicoesPaginadas, totalPaginas);
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+            
+            Optional<RestauranteFavorito> favorito = restauranteFavoritoRepository.findByUsuarioAndRestaurante(usuario, restaurante);
+            boolean isFavorito = favorito.isPresent();
+
+            return RestauranteMapper.toPorIdResponse(restaurante, refeicoesPaginadas, totalPaginas, isFavorito);
 
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao buscar restaurante por ID: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public void alternarFavorito(int idRestaurante) {
+        try {
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            Restaurante restaurante = restauranteRepository.findById(idRestaurante)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado."));
+
+            Optional<RestauranteFavorito> favoritoExistente = restauranteFavoritoRepository.findByUsuarioAndRestaurante(usuario, restaurante);
+
+            if (favoritoExistente.isPresent()) {
+                restauranteFavoritoRepository.delete(favoritoExistente.get());
+            } else {
+                RestauranteFavorito novoFavorito = RestauranteMapper.toEntity(usuario, restaurante);
+                restauranteFavoritoRepository.save(novoFavorito);
+            }
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao alternar favorito.", ex);
+        }
+    }
+
+    
+    @Transactional
+    public List<RestauranteFavoritoResponseDTO> listarRestaurantesFavoritos() {
+        try {
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            List<RestauranteFavorito> favoritos = restauranteFavoritoRepository.findByUsuario(usuario);
+
+            List<Restaurante> restaurantes = favoritos.stream()
+                    .map(RestauranteFavorito::getRestaurante)
+                    .collect(Collectors.toList());
+
+            Set<Integer> idsFavoritados = restaurantes.stream()
+                    .map(Restaurante::getIdRestaurante)
+                    .collect(Collectors.toSet());
+
+            return RestauranteMapper.toUsuarioCardResponseList(restaurantes, idsFavoritados);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao listar favoritos.", ex);
         }
     }
 }
