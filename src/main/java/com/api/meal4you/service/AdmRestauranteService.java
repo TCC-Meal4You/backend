@@ -186,7 +186,7 @@ public class AdmRestauranteService {
 
             if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
                 
-                if (adm.getSenha() == null || adm.getSenha().isBlank()) { // <--- Isso bloqueia a alteração de senha se o administrador não tem senha cadastrada (criou conta via social login)
+                if (adm.getSenha() == null || adm.getSenha().isBlank()) { // <-- Isso bloqueia a alteração de senha se o administrador não tem senha cadastrada (criou conta via social login)
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Administrador criado via social login. Não pode definir senha.");
                 }
                 if (!encoder.matches(dto.getSenha(), adm.getSenha())) {
