@@ -292,6 +292,7 @@ public class UsuarioService {
                 // Criar e associar SocialLogin
                 SocialLogin socialLogin = SocialLogin.builder()
                         .usuario(usuario)
+                        .adm(null)
                         .provider("google")
                         .providerId(googleId)
                         .build();
