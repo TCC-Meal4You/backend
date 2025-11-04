@@ -1,5 +1,6 @@
 package com.api.meal4you.controller;
 
+import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
@@ -27,8 +28,8 @@ public class RestauranteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RestauranteResponseDTO>> listarRestaurantes() {
-        List<RestauranteResponseDTO> response = restauranteService.listarTodos();
+    public ResponseEntity<List<RestauranteFavoritoResponseDTO>> listarRestaurantes() {
+        List<RestauranteFavoritoResponseDTO> response = restauranteService.listarTodos();
         return ResponseEntity.ok(response);
     }
 
@@ -53,6 +54,18 @@ public class RestauranteController {
     @GetMapping("/listar-por-id/{id}")
     public ResponseEntity<RestaurantePorIdResponseDTO> listarPorId(@PathVariable int id, @RequestParam Integer numPagina) {
         RestaurantePorIdResponseDTO response = restauranteService.listarPorId(id, numPagina);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/favorito")
+    public ResponseEntity<Void> alternarFavorito(@PathVariable int id) {
+        restauranteService.alternarFavorito(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/favoritos")
+    public ResponseEntity<List<RestauranteFavoritoResponseDTO>> listarRestaurantesFavoritos() {
+        List<RestauranteFavoritoResponseDTO> response = restauranteService.listarRestaurantesFavoritos();
         return ResponseEntity.ok(response);
     }
 }
