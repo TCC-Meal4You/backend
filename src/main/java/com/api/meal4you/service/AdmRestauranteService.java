@@ -121,7 +121,7 @@ public class AdmRestauranteService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
             }
 
-            tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
+            tokenStore.removerTodosTokensDaPessoa(adm.getEmail(), "ADMIN");
             adm.setEmail(novoEmail);
             admRepository.save(adm);
             return AdmRestauranteMapper.toResponse(adm);
@@ -192,7 +192,7 @@ public class AdmRestauranteService {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Administrador criado via social login. Não pode definir senha.");
                 }
                 if (!encoder.matches(dto.getSenha(), adm.getSenha())) {
-                    tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
+                    tokenStore.removerTodosTokensDaPessoa(adm.getEmail(), "ADMIN");
                     adm.setSenha(encoder.encode(dto.getSenha()));
                     alterado = true;
                 }
@@ -238,11 +238,11 @@ public class AdmRestauranteService {
                 }
 
                 restauranteFavoritoRepository.deleteByRestaurante(restaurante);
-                socialLoginRepository.deleteByAdm(adm);
                 restauranteRepository.delete(restaurante);
             });
 
-            tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
+            socialLoginRepository.deleteByAdm(adm);
+            tokenStore.removerTodosTokensDaPessoa(adm.getEmail(), "ADMIN");
             admRepository.delete(adm);
         } catch (ResponseStatusException ex) {
             throw ex;
@@ -350,7 +350,7 @@ public class AdmRestauranteService {
     public void logoutGlobal() {
         try {
             String emailLogado = getAdmLogadoEmail();
-            tokenStore.removerTodosTokensDoUsuario(emailLogado);
+            tokenStore.removerTodosTokensDaPessoa(emailLogado, "ADMIN");
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao fazer logout global: " + ex.getMessage());
