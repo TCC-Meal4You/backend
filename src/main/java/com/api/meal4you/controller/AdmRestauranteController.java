@@ -82,8 +82,8 @@ public class AdmRestauranteController {
 
         @PostMapping("/login/oauth2/google")
     public ResponseEntity<LoginResponseDTO> fazerloginComGoogle(@RequestBody GoogleLoginRequestDTO body) {
-        String idToken = body.getIdToken();
-        LoginResponseDTO response = admRestauranteService.fazerLoginComGoogle(idToken);
+        String accessToken = body.getAccessToken();
+        LoginResponseDTO response = admRestauranteService.fazerLoginComGoogle(accessToken);
         return ResponseEntity.ok(response);
     }
 

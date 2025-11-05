@@ -253,10 +253,10 @@ public class AdmRestauranteService {
     }
 
     @Transactional
-    public LoginResponseDTO fazerLoginComGoogle(String idToken) {
+    public LoginResponseDTO fazerLoginComGoogle(String accessToken) {
         try {
             // 1. Obter dados do usuário Google
-            GooglePeopleApiService.GoogleUserInfo googleUser = googlePeopleApiService.getUserInfo(idToken);
+            GooglePeopleApiService.GoogleUserInfo googleUser = googlePeopleApiService.getUserInfo(accessToken);
             String email = googleUser.getEmail();
             String nome = googleUser.getName();
             String googleId = googleUser.getId();
