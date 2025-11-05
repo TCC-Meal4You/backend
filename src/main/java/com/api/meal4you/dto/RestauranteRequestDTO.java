@@ -16,6 +16,6 @@ public class RestauranteRequestDTO {
 
     private String tipoComida;
 
-    private boolean aberto;
+    private boolean ativo;
     
 }

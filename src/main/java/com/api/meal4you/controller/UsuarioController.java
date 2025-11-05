@@ -70,8 +70,8 @@ public class UsuarioController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Map<String, String>> deletarMinhaConta(@RequestParam String senha) {
-        usuarioService.deletarMinhaConta(senha);
+    public ResponseEntity<Map<String, String>> deletarMinhaConta(@RequestParam String email) {
+        usuarioService.deletarMinhaConta(email);
         return ResponseEntity.ok(Map.of("mensagem", "Usuário deletado com sucesso."));
     }
 
@@ -89,8 +89,8 @@ public class UsuarioController {
 
     @PostMapping("/login/oauth2/google")
     public ResponseEntity<LoginResponseDTO> fazerloginComGoogle(@RequestBody GoogleLoginRequestDTO body) {
-        String idToken = body.getIdToken();
-        LoginResponseDTO response = usuarioService.fazerLoginComGoogle(idToken);
+        String accessToken = body.getAccessToken();
+        LoginResponseDTO response = usuarioService.fazerLoginComGoogle(accessToken);
         return ResponseEntity.ok(response);
     }
 

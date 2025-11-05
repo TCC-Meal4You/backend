@@ -16,6 +16,7 @@ import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Ingrediente;
 import com.api.meal4you.entity.Refeicao;
+import com.api.meal4you.entity.SocialLogin;
 import com.api.meal4you.mapper.AdmRestauranteMapper;
 import com.api.meal4you.mapper.LoginMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
@@ -23,7 +24,9 @@ import com.api.meal4you.repository.IngredienteRepository;
 import com.api.meal4you.repository.IngredienteRestricaoRepository;
 import com.api.meal4you.repository.RefeicaoIngredienteRepository;
 import com.api.meal4you.repository.RefeicaoRepository;
+import com.api.meal4you.repository.RestauranteFavoritoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
+import com.api.meal4you.repository.SocialLoginRepository;
 import com.api.meal4you.security.JwtUtil;
 import com.api.meal4you.security.TokenStore;
 
@@ -38,11 +41,14 @@ public class AdmRestauranteService {
     private final TokenStore tokenStore;
     private final VerificaEmailService verificaEmailService;
     private final EmailCodeSenderService emailCodeSenderService;
+    private final GooglePeopleApiService googlePeopleApiService;
+    private final SocialLoginRepository socialLoginRepository;
     private final RestauranteRepository restauranteRepository;
     private final IngredienteRepository ingredienteRepository;
     private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
     private final RefeicaoRepository refeicaoRepository;
     private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
+    private final RestauranteFavoritoRepository restauranteFavoritoRepository;
 
     public String getAdmLogadoEmail() {
         try {
@@ -59,6 +65,7 @@ public class AdmRestauranteService {
         }
     }
 
+    @Transactional
     public void enviarCodigoVerificacao(String email) {
         try {
             if (admRepository.findByEmail(email).isPresent()) {
@@ -82,6 +89,15 @@ public class AdmRestauranteService {
             if (admRepository.findByEmail(novoEmail).isPresent()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Não há alteração, o e-mail é o mesmo.");
             }
+
+            String emailLogado = getAdmLogadoEmail(); // Pega e-mail do administrador logado
+            AdmRestaurante adm = admRepository.findByEmail(emailLogado) // Pega o "objeto" do administrador logado
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
+
+            if (adm.getSenha() == null || adm.getSenha().isBlank()) { // <--- Isso serve para bloquear a alteração de e-mail para administradores que logam via social login (ou seja, sem senha cadastrada no banco)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Administrador criado via social login. Não pode alterar e-mail.");
+            }
+
             String codigo = verificaEmailService.gerarESalvarCodigo(novoEmail);
             String subject = "Meal4You - Confirmação de Alteração de E-mail";
             String body = "Olá! Use este código para confirmar a alteração do seu e-mail: " + codigo;
@@ -105,7 +121,7 @@ public class AdmRestauranteService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
             }
 
-            tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
+            tokenStore.removerTodosTokensDaPessoa(adm.getEmail(), "ADMIN");
             adm.setEmail(novoEmail);
             admRepository.save(adm);
             return AdmRestauranteMapper.toResponse(adm);
@@ -170,11 +186,16 @@ public class AdmRestauranteService {
                 alterado = true;
             }
 
-            if (dto.getSenha() != null && !dto.getSenha().isBlank()
-                    && !encoder.matches(dto.getSenha(), adm.getSenha())) {
-                tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
-                adm.setSenha(encoder.encode(dto.getSenha()));
-                alterado = true;
+            if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
+                
+                if (adm.getSenha() == null || adm.getSenha().isBlank()) { // <-- Isso bloqueia a alteração de senha se o administrador não tem senha cadastrada (criou conta via social login)
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Administrador criado via social login. Não pode definir senha.");
+                }
+                if (!encoder.matches(dto.getSenha(), adm.getSenha())) {
+                    tokenStore.removerTodosTokensDaPessoa(adm.getEmail(), "ADMIN");
+                    adm.setSenha(encoder.encode(dto.getSenha()));
+                    alterado = true;
+                }
             }
 
             if (!alterado) {
@@ -192,14 +213,14 @@ public class AdmRestauranteService {
     }
 
     @Transactional
-    public void deletarMinhaConta(String senha) {
+    public void deletarMinhaConta(String email) {
         try {
             String emailLogado = getAdmLogadoEmail();
             AdmRestaurante adm = admRepository.findByEmail(emailLogado)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não autenticado."));
 
-            if (!encoder.matches(senha, adm.getSenha())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha incorreta");
+            if (!email.equals(adm.getEmail())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail de confirmação incorreto.");
             }
 
             restauranteRepository.findByAdmin(adm).ifPresent(restaurante -> {
@@ -216,16 +237,75 @@ public class AdmRestauranteService {
                     ingredienteRepository.deleteAll(ingredientes);
                 }
 
+                restauranteFavoritoRepository.deleteByRestaurante(restaurante);
                 restauranteRepository.delete(restaurante);
             });
 
-            tokenStore.removerTodosTokensDoUsuario(adm.getEmail());
+            socialLoginRepository.deleteByAdm(adm);
+            tokenStore.removerTodosTokensDaPessoa(adm.getEmail(), "ADMIN");
             admRepository.delete(adm);
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao deletar conta: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public LoginResponseDTO fazerLoginComGoogle(String accessToken) {
+        try {
+            // 1. Obter dados do usuário Google
+            GooglePeopleApiService.GoogleUserInfo googleUser = googlePeopleApiService.getUserInfo(accessToken);
+            String email = googleUser.getEmail();
+            String nome = googleUser.getName();
+            String googleId = googleUser.getId();
+            System.out.println("debug: " + email + ", " + nome + ", " + googleId);
+
+            // 2. Verificar se já existe AdmRestaurante com esse e-mail
+            AdmRestaurante adm = admRepository.findByEmail(email).orElse(null);
+            if (adm == null) {
+                // 3. Se não existe, criar novo AdmRestaurante e associar SocialLogin
+                adm = new AdmRestaurante();
+                adm.setNome(nome);
+                adm.setEmail(email);
+                adm.setSenha(null); // Não tem senha
+                adm = admRepository.save(adm);
+
+                // Criar e associar SocialLogin
+        SocialLogin socialLogin = SocialLogin.builder()
+                        .usuario(null)
+                        .adm(adm)
+                        .provider("google")
+                        .providerId(googleId)
+                        .build();
+                socialLoginRepository.save(socialLogin);
+                adm.getSocialLogins().add(socialLogin);
+            } else {
+                // 4. Se já existe, garantir que o SocialLogin está associado
+                boolean hasGoogle = adm.getSocialLogins().stream()
+                        .anyMatch(sl -> "google".equals(sl.getProvider()) && googleId.equals(sl.getProviderId()));
+                if (!hasGoogle) {
+            SocialLogin socialLogin = SocialLogin.builder()
+                .adm(adm)
+                .provider("google")
+                .providerId(googleId)
+                .build();
+                    socialLoginRepository.save(socialLogin);
+                    adm.getSocialLogins().add(socialLogin);
+                }
+            }
+            admRepository.save(adm);
+
+            // 5. Gerar token JWT e retornar
+            String token = jwtUtil.gerarToken(adm.getEmail(), "ADMIN");
+            tokenStore.salvarToken(token);
+            return LoginMapper.toResponse(adm, token);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao fazer login com Google: " + ex.getMessage());
         }
     }
 
@@ -270,7 +350,7 @@ public class AdmRestauranteService {
     public void logoutGlobal() {
         try {
             String emailLogado = getAdmLogadoEmail();
-            tokenStore.removerTodosTokensDoUsuario(emailLogado);
+            tokenStore.removerTodosTokensDaPessoa(emailLogado, "ADMIN");
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao fazer logout global: " + ex.getMessage());

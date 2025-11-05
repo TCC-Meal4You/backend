@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import lombok.AllArgsConstructor;
+
 @Service
 public class VerificaEmailService {
 
@@ -14,15 +16,10 @@ public class VerificaEmailService {
     private final Map<String, CodigoInfo> emailParaCodigo = new ConcurrentHashMap<>();
 
      //Classe interna para guardar o código e o horário de expiração
+    @AllArgsConstructor
     private static class CodigoInfo {
         String codigo;
         long tempExpiracao;
-
-        // Construtor da classe interna (CódigoInfo)
-        CodigoInfo(String codigo, long tempExpiracao) {
-            this.codigo = codigo;
-            this.tempExpiracao = tempExpiracao;
-        }
     }
 
     // Gera um código de 6 dígitos e vincula ao e-mail, com validade de apenas 5 minutos

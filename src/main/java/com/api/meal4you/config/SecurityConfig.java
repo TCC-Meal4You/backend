@@ -44,6 +44,7 @@ public class SecurityConfig {
                         
                         //Admin 
                         .requestMatchers(HttpMethod.POST, "/admins/login").permitAll() // login
+                        .requestMatchers(HttpMethod.POST, "/admins/login/oauth2/google").permitAll() // login social
                         .requestMatchers(HttpMethod.POST, "/admins").permitAll() // cadastro
                         .requestMatchers(HttpMethod.POST, "/admins/verifica-email").permitAll() // verifica email
                         .requestMatchers("/admins/**").hasRole("ADMIN") // outros métodos
@@ -55,7 +56,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/restaurantes/{id}").hasRole("ADMIN") // atualizar
                         .requestMatchers(HttpMethod.DELETE, "/restaurantes/{id}").hasRole("ADMIN") // deletar
                         .requestMatchers(HttpMethod.GET, "/restaurantes/meu-restaurante").hasRole("ADMIN") // meu restaurante
-
+                        .requestMatchers(HttpMethod.POST, "/restaurantes/{id}/favorito").hasRole("USUARIO") // favoritar/desfavoritar
+                        .requestMatchers(HttpMethod.GET, "/restaurantes/favoritos").hasRole("USUARIO") // listar favoritos
+                        
                         //Refeições
                         .requestMatchers("/refeicoes/**").hasRole("ADMIN") // todos os métodos
 

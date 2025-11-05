@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.api.meal4you.dto.AdmRestauranteRequestDTO;
 import com.api.meal4you.dto.AdmRestauranteResponseDTO;
 import com.api.meal4you.dto.AtualizarEmailRequestDTO;
+import com.api.meal4you.dto.GoogleLoginRequestDTO;
 import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.dto.VerificaEmailRequestDTO;
@@ -68,14 +69,21 @@ public class AdmRestauranteController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deletarMinhaConta(@RequestParam String senha) {
-        admRestauranteService.deletarMinhaConta(senha);
+    public ResponseEntity<Void> deletarMinhaConta(@RequestParam String email) {
+        admRestauranteService.deletarMinhaConta(email);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
         LoginResponseDTO response = admRestauranteService.fazerLogin(dto);
+        return ResponseEntity.ok(response);
+    }
+
+        @PostMapping("/login/oauth2/google")
+    public ResponseEntity<LoginResponseDTO> fazerloginComGoogle(@RequestBody GoogleLoginRequestDTO body) {
+        String accessToken = body.getAccessToken();
+        LoginResponseDTO response = admRestauranteService.fazerLoginComGoogle(accessToken);
         return ResponseEntity.ok(response);
     }
 
