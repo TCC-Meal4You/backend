@@ -24,6 +24,7 @@ import com.api.meal4you.repository.IngredienteRepository;
 import com.api.meal4you.repository.IngredienteRestricaoRepository;
 import com.api.meal4you.repository.RefeicaoIngredienteRepository;
 import com.api.meal4you.repository.RefeicaoRepository;
+import com.api.meal4you.repository.RestauranteFavoritoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 import com.api.meal4you.repository.SocialLoginRepository;
 import com.api.meal4you.security.JwtUtil;
@@ -47,6 +48,7 @@ public class AdmRestauranteService {
     private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
     private final RefeicaoRepository refeicaoRepository;
     private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
+    private final RestauranteFavoritoRepository restauranteFavoritoRepository;
 
     public String getAdmLogadoEmail() {
         try {
@@ -234,6 +236,8 @@ public class AdmRestauranteService {
                     ingredientes.forEach(ingredienteRestricaoRepository::deleteByIngrediente);
                     ingredienteRepository.deleteAll(ingredientes);
                 }
+
+                restauranteFavoritoRepository.deleteByRestaurante(restaurante);
                 socialLoginRepository.deleteByAdm(adm);
                 restauranteRepository.delete(restaurante);
             });

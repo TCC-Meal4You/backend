@@ -69,8 +69,8 @@ public class AdmRestauranteController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deletarMinhaConta(@RequestParam String senha) {
-        admRestauranteService.deletarMinhaConta(senha);
+    public ResponseEntity<Void> deletarMinhaConta(@RequestParam String email) {
+        admRestauranteService.deletarMinhaConta(email);
         return ResponseEntity.ok().build();
     }
 

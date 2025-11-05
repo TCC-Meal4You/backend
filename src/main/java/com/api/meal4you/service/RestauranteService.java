@@ -187,6 +187,7 @@ public class RestauranteService {
                 ingredienteRepository.deleteAll(ingredientes);
             }
 
+            restauranteFavoritoRepository.deleteByRestaurante(restaurante);
             restauranteRepository.delete(restaurante);
 
         } catch (ResponseStatusException ex) {
