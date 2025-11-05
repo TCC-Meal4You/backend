@@ -13,6 +13,6 @@ import lombok.Setter;
 @Builder
 public class GoogleLoginRequestDTO {
 
-    private String idToken;
+    private String accessToken;
 
 }

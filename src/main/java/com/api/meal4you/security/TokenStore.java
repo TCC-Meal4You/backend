@@ -1,5 +1,6 @@
 package com.api.meal4you.security;
 
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,42 +16,41 @@ public class TokenStore {
 
     private final JwtUtil jwtUtil;
 
-    private final Map<String, Date> tokenParaExpiracao = new ConcurrentHashMap<>();
-    private final Map<String, String> tokenParaUsuario = new ConcurrentHashMap<>();
+    private final Map<String, TokenInfo> tokens = new ConcurrentHashMap<>();
 
+    @AllArgsConstructor
+    private static class TokenInfo {
+        String email;
+        String role;
+        Date expiracao;
+    }
 
     public void salvarToken(String token) {
         Date expiration = jwtUtil.getExpiracao(token);
         String email = jwtUtil.extrairEmail(token);
-        tokenParaExpiracao.put(token, expiration);
-        tokenParaUsuario.put(token, email);
+        String role = jwtUtil.extrairRole(token);
+        tokens.put(token, new TokenInfo(email, role, expiration));
     }
 
     public void removerToken(String token) {
-        tokenParaExpiracao.remove(token);
-        tokenParaUsuario.remove(token);
+        tokens.remove(token);
     }
 
     public boolean tokenEhRegistradoAtivo(String token) {
-        Date exp = tokenParaExpiracao.get(token);
-        return exp != null && exp.after(new Date());
+        TokenInfo info = tokens.get(token);
+        return info != null && info.expiracao.after(new Date());
     }
 
-     public void removerTodosTokensDoUsuario(String email) {
-        tokenParaUsuario.entrySet().removeIf(entry -> entry.getValue().equals(email));
-        tokenParaExpiracao.entrySet().removeIf(entry -> {
-            try {
-                return jwtUtil.extrairEmail(entry.getKey()).equals(email);
-            } catch (Exception e) {
-                return true;
-            }
+    public void removerTodosTokensDaPessoa(String email, String role) {
+        tokens.entrySet().removeIf(entry -> {
+            TokenInfo info = entry.getValue();
+            return info.email.equals(email) && info.role.equals(role);
         });
     }
 
     @Scheduled(fixedRate = 1000 * 60 * 60 * 24 * 365)
     public void removerTokensExpirados() {
         Date now = new Date();
-        tokenParaExpiracao.entrySet().removeIf(entry -> entry.getValue().before(now));
-        tokenParaUsuario.keySet().removeIf(token -> !tokenParaExpiracao.containsKey(token));
+        tokens.entrySet().removeIf(entry -> entry.getValue().expiracao.before(now));
     }
 }

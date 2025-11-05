@@ -20,4 +20,6 @@ public interface RestauranteFavoritoRepository extends JpaRepository<Restaurante
     Optional<RestauranteFavorito> findByUsuarioAndRestaurante(Usuario usuario, Restaurante restaurante);
 
     void deleteByUsuario(Usuario usuario);
+
+    void deleteByRestaurante(Restaurante restaurante);
 }
