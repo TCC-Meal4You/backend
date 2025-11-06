@@ -4,6 +4,7 @@ import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
+import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
 import com.api.meal4you.service.RestauranteService;
 import lombok.RequiredArgsConstructor;
 
@@ -57,6 +58,12 @@ public class RestauranteController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/avaliacoes")
+    public ResponseEntity<List<UsuarioAvaliaResponseDTO>> listarAvaliacoesMeuRestaurante() {
+        List<UsuarioAvaliaResponseDTO> response = restauranteService.listarAvaliacoesDoMeuRestaurante();
+        return ResponseEntity.ok(response);
+    }
+      
     @PostMapping("/{id}/favorito")
     public ResponseEntity<Void> alternarFavorito(@PathVariable int id) {
         restauranteService.alternarFavorito(id);

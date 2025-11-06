@@ -4,6 +4,10 @@ import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
+import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
+import com.api.meal4you.entity.*;
+import com.api.meal4you.mapper.RestauranteMapper;
+import com.api.meal4you.repository.*;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Ingrediente;
 import com.api.meal4you.entity.Refeicao;
@@ -43,6 +47,7 @@ public class RestauranteService {
     private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
     private final RefeicaoRepository refeicaoRepository;
     private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
+    private final UsuarioAvaliaRepository usuarioAvaliaRepository;
     private final UsuarioService usuarioService;
     private final UsuarioRepository usuarioRepository;
     private final RestauranteFavoritoRepository restauranteFavoritoRepository;
@@ -187,6 +192,8 @@ public class RestauranteService {
                 ingredienteRepository.deleteAll(ingredientes);
             }
 
+            usuarioAvaliaRepository.deleteByRestaurante(restaurante);
+
             restauranteFavoritoRepository.deleteByRestaurante(restaurante);
             restauranteRepository.delete(restaurante);
 
@@ -266,7 +273,29 @@ public class RestauranteService {
         }
     }
 
-    @Transactional
+   @Transactional
+    public List<UsuarioAvaliaResponseDTO> listarAvaliacoesDoMeuRestaurante() {
+        try {
+            String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
+
+            AdmRestaurante admin = admRestauranteRepository.findByEmail(emailAdmLogado)
+                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Administrador não encontrado"));
+
+            Restaurante restaurante = restauranteRepository.findByAdmin(admin)
+                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Restaurante não encontrado. Cadastre primeiro"));
+
+            List<com.api.meal4you.entity.UsuarioAvalia> avaliacoes = usuarioAvaliaRepository.findByRestaurante(restaurante);
+
+            return avaliacoes.stream().map(com.api.meal4you.mapper.UsuarioAvaliaMapper::toResponse).collect(java.util.stream.Collectors.toList());
+
+        } catch (org.springframework.web.server.ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao listar avaliações do restaurante: " + ex.getMessage());
+        }
+    }
+  
     public void alternarFavorito(int idRestaurante) {
         try {
             String emailLogado = usuarioService.getUsuarioLogadoEmail();
