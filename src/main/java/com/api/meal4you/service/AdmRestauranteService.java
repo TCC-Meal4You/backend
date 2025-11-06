@@ -27,6 +27,7 @@ import com.api.meal4you.repository.RefeicaoRepository;
 import com.api.meal4you.repository.RestauranteFavoritoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 import com.api.meal4you.repository.SocialLoginRepository;
+import com.api.meal4you.repository.UsuarioAvaliaRepository;
 import com.api.meal4you.security.JwtUtil;
 import com.api.meal4you.security.TokenStore;
 
@@ -49,6 +50,7 @@ public class AdmRestauranteService {
     private final RefeicaoRepository refeicaoRepository;
     private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
     private final RestauranteFavoritoRepository restauranteFavoritoRepository;
+    private final UsuarioAvaliaRepository usuarioAvaliaRepository;
 
     public String getAdmLogadoEmail() {
         try {
@@ -237,6 +239,7 @@ public class AdmRestauranteService {
                     ingredienteRepository.deleteAll(ingredientes);
                 }
 
+                usuarioAvaliaRepository.deleteByRestaurante(restaurante);
                 restauranteFavoritoRepository.deleteByRestaurante(restaurante);
                 restauranteRepository.delete(restaurante);
             });

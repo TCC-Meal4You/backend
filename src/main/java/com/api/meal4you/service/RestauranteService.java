@@ -5,24 +5,9 @@ import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
-import com.api.meal4you.entity.*;
 import com.api.meal4you.mapper.RestauranteMapper;
 import com.api.meal4you.repository.*;
-import com.api.meal4you.entity.AdmRestaurante;
-import com.api.meal4you.entity.Ingrediente;
-import com.api.meal4you.entity.Refeicao;
-import com.api.meal4you.entity.Restaurante;
-import com.api.meal4you.entity.RestauranteFavorito;
-import com.api.meal4you.entity.Usuario;
-import com.api.meal4you.mapper.RestauranteMapper;
-import com.api.meal4you.repository.AdmRestauranteRepository;
-import com.api.meal4you.repository.IngredienteRepository;
-import com.api.meal4you.repository.IngredienteRestricaoRepository;
-import com.api.meal4you.repository.RefeicaoIngredienteRepository;
-import com.api.meal4you.repository.RefeicaoRepository;
-import com.api.meal4you.repository.RestauranteFavoritoRepository;
-import com.api.meal4you.repository.RestauranteRepository;
-import com.api.meal4you.repository.UsuarioRepository;
+import com.api.meal4you.entity.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -193,7 +178,6 @@ public class RestauranteService {
             }
 
             usuarioAvaliaRepository.deleteByRestaurante(restaurante);
-
             restauranteFavoritoRepository.deleteByRestaurante(restaurante);
             restauranteRepository.delete(restaurante);
 

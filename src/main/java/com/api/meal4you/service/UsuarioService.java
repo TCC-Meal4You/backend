@@ -6,25 +6,20 @@ import java.util.stream.Collectors;
 
 import com.api.meal4you.dto.*;
 import com.api.meal4you.entity.*;
+import com.api.meal4you.repository.*;
+
 import com.api.meal4you.mapper.UsuarioAvaliaMapper;
+import com.api.meal4you.mapper.LoginMapper;
+import com.api.meal4you.mapper.UsuarioMapper;
+import com.api.meal4you.security.JwtUtil;
+import com.api.meal4you.security.TokenStore;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import com.api.meal4you.mapper.LoginMapper;
-import com.api.meal4you.mapper.UsuarioMapper;
-import com.api.meal4you.repository.RestauranteFavoritoRepository;
-import com.api.meal4you.repository.RestricaoRepository;
-import com.api.meal4you.repository.SocialLoginRepository;
-import com.api.meal4you.repository.UsuarioRepository;
-import com.api.meal4you.repository.UsuarioRestricaoRepository;
-import com.api.meal4you.repository.RestauranteRepository;
-import com.api.meal4you.repository.UsuarioAvaliaRepository;
-import com.api.meal4you.security.JwtUtil;
-import com.api.meal4you.security.TokenStore;
 
 import lombok.RequiredArgsConstructor;
 
