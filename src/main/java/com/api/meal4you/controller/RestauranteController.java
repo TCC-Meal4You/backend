@@ -3,6 +3,7 @@ package com.api.meal4you.controller;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
+import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
 import com.api.meal4you.service.RestauranteService;
 import lombok.RequiredArgsConstructor;
 
@@ -53,6 +54,12 @@ public class RestauranteController {
     @GetMapping("/listar-por-id/{id}")
     public ResponseEntity<RestaurantePorIdResponseDTO> listarPorId(@PathVariable int id, @RequestParam Integer numPagina) {
         RestaurantePorIdResponseDTO response = restauranteService.listarPorId(id, numPagina);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/avaliacoes")
+    public ResponseEntity<List<UsuarioAvaliaResponseDTO>> listarAvaliacoesMeuRestaurante() {
+        List<UsuarioAvaliaResponseDTO> response = restauranteService.listarAvaliacoesDoMeuRestaurante();
         return ResponseEntity.ok(response);
     }
 }

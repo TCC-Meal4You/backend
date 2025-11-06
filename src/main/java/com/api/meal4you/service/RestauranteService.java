@@ -3,17 +3,10 @@ package com.api.meal4you.service;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
-import com.api.meal4you.entity.AdmRestaurante;
-import com.api.meal4you.entity.Ingrediente;
-import com.api.meal4you.entity.Refeicao;
-import com.api.meal4you.entity.Restaurante;
+import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
+import com.api.meal4you.entity.*;
 import com.api.meal4you.mapper.RestauranteMapper;
-import com.api.meal4you.repository.AdmRestauranteRepository;
-import com.api.meal4you.repository.IngredienteRepository;
-import com.api.meal4you.repository.IngredienteRestricaoRepository;
-import com.api.meal4you.repository.RefeicaoIngredienteRepository;
-import com.api.meal4you.repository.RefeicaoRepository;
-import com.api.meal4you.repository.RestauranteRepository;
+import com.api.meal4you.repository.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,6 +29,7 @@ public class RestauranteService {
     private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
     private final RefeicaoRepository refeicaoRepository;
     private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
+    private final UsuarioAvaliaRepository usuarioAvaliaRepository;
 
     private void verificarRestauranteDoAdmLogado(Restaurante restaurante, String emailAdmLogado) {
         if (!restaurante.getAdmin().getEmail().equals(emailAdmLogado)) {
@@ -166,6 +160,8 @@ public class RestauranteService {
                 ingredienteRepository.deleteAll(ingredientes);
             }
 
+            usuarioAvaliaRepository.deleteByRestaurante(restaurante);
+
             restauranteRepository.delete(restaurante);
 
         } catch (ResponseStatusException ex) {
@@ -234,6 +230,29 @@ public class RestauranteService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao buscar restaurante por ID: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public List<UsuarioAvaliaResponseDTO> listarAvaliacoesDoMeuRestaurante() {
+        try {
+            String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
+
+            AdmRestaurante admin = admRestauranteRepository.findByEmail(emailAdmLogado)
+                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Administrador não encontrado"));
+
+            Restaurante restaurante = restauranteRepository.findByAdmin(admin)
+                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Restaurante não encontrado. Cadastre primeiro"));
+
+            List<com.api.meal4you.entity.UsuarioAvalia> avaliacoes = usuarioAvaliaRepository.findByRestaurante(restaurante);
+
+            return avaliacoes.stream().map(com.api.meal4you.mapper.UsuarioAvaliaMapper::toResponse).collect(java.util.stream.Collectors.toList());
+
+        } catch (org.springframework.web.server.ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao listar avaliações do restaurante: " + ex.getMessage());
         }
     }
 }
