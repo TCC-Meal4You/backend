@@ -1,8 +1,12 @@
 package com.api.meal4you.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.api.meal4you.dto.*;
+import com.api.meal4you.entity.*;
+import com.api.meal4you.mapper.UsuarioAvaliaMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,15 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.api.meal4you.dto.LoginRequestDTO;
-import com.api.meal4you.dto.LoginResponseDTO;
-import com.api.meal4you.dto.UsuarioRequestDTO;
-import com.api.meal4you.dto.UsuarioResponseDTO;
-import com.api.meal4you.dto.UsuarioRestricaoRequestDTO;
-import com.api.meal4you.entity.Restricao;
-import com.api.meal4you.entity.SocialLogin;
-import com.api.meal4you.entity.Usuario;
-import com.api.meal4you.entity.UsuarioRestricao;
 import com.api.meal4you.mapper.LoginMapper;
 import com.api.meal4you.mapper.UsuarioMapper;
 import com.api.meal4you.repository.RestauranteFavoritoRepository;
@@ -26,6 +21,8 @@ import com.api.meal4you.repository.RestricaoRepository;
 import com.api.meal4you.repository.SocialLoginRepository;
 import com.api.meal4you.repository.UsuarioRepository;
 import com.api.meal4you.repository.UsuarioRestricaoRepository;
+import com.api.meal4you.repository.RestauranteRepository;
+import com.api.meal4you.repository.UsuarioAvaliaRepository;
 import com.api.meal4you.security.JwtUtil;
 import com.api.meal4you.security.TokenStore;
 
@@ -45,6 +42,8 @@ public class UsuarioService {
     private final VerificaEmailService verificaEmailService;
     private final EmailCodeSenderService emailCodeSenderService;
     private final GooglePeopleApiService googlePeopleApiService;
+    private final RestauranteRepository restauranteRepository;
+    private final UsuarioAvaliaRepository usuarioAvaliaRepository;
     private final RestauranteFavoritoRepository restauranteFavoritoRepository;
 
     public String getUsuarioLogadoEmail() {
@@ -117,7 +116,6 @@ public class UsuarioService {
             if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado");
             }
-            
             Usuario usuario = UsuarioMapper.toEntity(dto);
             usuario.setSenha(encoder.encode(usuario.getSenha()));
             usuarioRepository.saveAndFlush(usuario);
@@ -159,6 +157,7 @@ public class UsuarioService {
             tokenStore.removerTodosTokensDaPessoa(usuario.getEmail(), "USUARIO");
             socialLoginRepository.deleteByUsuario(usuario);
             usuarioRestricaoRepository.deleteByUsuario(usuario);
+            usuarioAvaliaRepository.deleteByUsuario(usuario);
             restauranteFavoritoRepository.deleteByUsuario(usuario);
             usuarioRepository.delete(usuario);
         } catch (ResponseStatusException ex) {
@@ -206,7 +205,6 @@ public class UsuarioService {
                 alterado = true;
             }
             if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
-                
                 if (usuario.getSenha() == null || usuario.getSenha().isBlank()) { // <--- Isso bloqueia a alteração de senha se o usuário não tem senha cadastrada (criou conta via social login)
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário criado via social login. Não pode definir senha.");
                 }
@@ -262,7 +260,6 @@ public class UsuarioService {
             usuarioRestricaoRepository.saveAll(novasAssociacoes);
 
             usuario.setUsuarioRestricoes(novasAssociacoes);
-            
             return UsuarioMapper.toResponse(usuario);
 
         } catch (ResponseStatusException ex) {
@@ -375,5 +372,61 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao fazer logout global: " + ex.getMessage());
         }
+    }
+
+    @Transactional
+    public UsuarioAvaliaResponseDTO avaliarRestaurante(UsuarioAvaliaRequestDTO dto) {
+        String emailLogado = getUsuarioLogadoEmail();
+        Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+        Restaurante restaurante = restauranteRepository.findById(dto.getIdRestaurante())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado."));
+
+        if (dto.getNota() == null || dto.getNota() < 0 || dto.getNota() > 5) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nota inválida. Deve estar entre 0 e 5.");
+        }
+
+        // Evita avaliações duplicadas: atualiza se já existe, cria caso contrário
+        Optional<UsuarioAvalia> existente = usuarioAvaliaRepository.findByUsuarioAndRestaurante(usuario, restaurante);
+        UsuarioAvalia avaliacao;
+        if (existente.isPresent()) {
+            avaliacao = existente.get();
+            avaliacao.setNota(dto.getNota());
+            avaliacao.setComentario(dto.getComentario());
+        } else {
+            avaliacao = UsuarioAvaliaMapper.toEntity(dto, usuario, restaurante);
+        }
+
+        usuarioAvaliaRepository.save(avaliacao);
+        return UsuarioAvaliaMapper.toResponse(avaliacao);
+    }
+
+    @Transactional
+    public UsuarioAvaliaResponseDTO deletarAvaliacao(Integer idRestaurante) {
+        String emailLogado = getUsuarioLogadoEmail();
+        Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+        Restaurante restaurante = restauranteRepository.findById(idRestaurante)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restaurante não encontrado."));
+
+        UsuarioAvalia avaliacao = usuarioAvaliaRepository.findByUsuarioAndRestaurante(usuario, restaurante)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Avaliação não encontrada."));
+
+        usuarioAvaliaRepository.delete(avaliacao);
+        return UsuarioAvaliaMapper.toResponse(avaliacao);
+    }
+
+    @Transactional
+    public List<UsuarioAvaliaResponseDTO> verAvaliacoes() {
+        String emailLogado = getUsuarioLogadoEmail();
+        Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+        List<UsuarioAvalia> avaliacoes = usuarioAvaliaRepository.findByUsuario(usuario);
+        return avaliacoes.stream()
+                .map(UsuarioAvaliaMapper::toResponse)
+                .collect(Collectors.toList());
     }
 }
