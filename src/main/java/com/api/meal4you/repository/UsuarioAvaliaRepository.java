@@ -1,7 +1,6 @@
 package com.api.meal4you.repository;
 
 import com.api.meal4you.entity.*;
-import org.hibernate.sql.Delete;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
