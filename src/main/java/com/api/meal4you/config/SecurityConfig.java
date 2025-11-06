@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/restaurantes/meu-restaurante").hasRole("ADMIN") // meu restaurante
                         .requestMatchers(HttpMethod.POST, "/restaurantes/{id}/favorito").hasRole("USUARIO") // favoritar/desfavoritar
                         .requestMatchers(HttpMethod.GET, "/restaurantes/favoritos").hasRole("USUARIO") // listar favoritos
+                        .requestMatchers(HttpMethod.GET, "/restaurantes/avaliacoes").hasRole("ADMIN") // listar avaliações
                         
                         //Refeições
                         .requestMatchers("/refeicoes/**").hasRole("ADMIN") // todos os métodos
