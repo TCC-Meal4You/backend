@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.api.meal4you.mapper.LoginMapper;
 import com.api.meal4you.mapper.UsuarioMapper;
+import com.api.meal4you.repository.RestauranteFavoritoRepository;
 import com.api.meal4you.repository.RestricaoRepository;
 import com.api.meal4you.repository.SocialLoginRepository;
 import com.api.meal4you.repository.UsuarioRepository;
@@ -43,6 +44,7 @@ public class UsuarioService {
     private final GooglePeopleApiService googlePeopleApiService;
     private final RestauranteRepository restauranteRepository;
     private final UsuarioAvaliaRepository usuarioAvaliaRepository;
+    private final RestauranteFavoritoRepository restauranteFavoritoRepository;
 
     public String getUsuarioLogadoEmail() {
         try {
@@ -152,10 +154,11 @@ public class UsuarioService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail incorreto");
             }
 
-            tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
+            tokenStore.removerTodosTokensDaPessoa(usuario.getEmail(), "USUARIO");
             socialLoginRepository.deleteByUsuario(usuario);
             usuarioRestricaoRepository.deleteByUsuario(usuario);
             usuarioAvaliaRepository.deleteByUsuario(usuario);
+            restauranteFavoritoRepository.deleteByUsuario(usuario);
             usuarioRepository.delete(usuario);
         } catch (ResponseStatusException ex) {
             throw ex;
@@ -176,7 +179,7 @@ public class UsuarioService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
             }
 
-            tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
+            tokenStore.removerTodosTokensDaPessoa(usuario.getEmail(), "USUARIO");
             usuario.setEmail(novoEmail);
             usuarioRepository.save(usuario);
             return UsuarioMapper.toResponse(usuario);
@@ -206,7 +209,7 @@ public class UsuarioService {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário criado via social login. Não pode definir senha.");
                 }
                 if (!encoder.matches(dto.getSenha(), usuario.getSenha())) {
-                    tokenStore.removerTodosTokensDoUsuario(usuario.getEmail());
+                    tokenStore.removerTodosTokensDaPessoa(usuario.getEmail(), "USUARIO");
                     usuario.setSenha(encoder.encode(dto.getSenha()));
                     alterado = true;
                 }
@@ -268,10 +271,10 @@ public class UsuarioService {
     }
 
     @Transactional
-    public LoginResponseDTO fazerLoginComGoogle(String idToken) {
+    public LoginResponseDTO fazerLoginComGoogle(String accessToken) {
         try {
             // 1. Obter dados do usuário Google
-            GooglePeopleApiService.GoogleUserInfo googleUser = googlePeopleApiService.getUserInfo(idToken);
+            GooglePeopleApiService.GoogleUserInfo googleUser = googlePeopleApiService.getUserInfo(accessToken);
             String email = googleUser.getEmail();
             String nome = googleUser.getName();
             String googleId = googleUser.getId();
@@ -364,7 +367,7 @@ public class UsuarioService {
     public void logoutGlobal() {
         try {
             String emailLogado = getUsuarioLogadoEmail();
-            tokenStore.removerTodosTokensDoUsuario(emailLogado);
+            tokenStore.removerTodosTokensDaPessoa(emailLogado, "USUARIO");
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao fazer logout global: " + ex.getMessage());
