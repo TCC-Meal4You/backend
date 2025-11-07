@@ -280,6 +280,26 @@ public class RestauranteService {
                     "Erro ao listar avaliações do restaurante: " + ex.getMessage());
         }
     }
+
+    @Transactional
+    public List<UsuarioAvaliaResponseDTO> listarAvaliacoesPorIdDoRestaurante(int idRestaurante) {
+        try {
+            Restaurante restaurante = restauranteRepository.findById(idRestaurante)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado"));
+
+            List<UsuarioAvalia> avaliacoes = usuarioAvaliaRepository.findByRestaurante(restaurante);
+
+            return avaliacoes.stream().
+                map(UsuarioAvaliaMapper::toResponse)
+                .collect(Collectors.toList());
+
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao listar avaliações do restaurante: " + ex.getMessage());
+        }
+    }
   
     public void alternarFavorito(int idRestaurante) {
         try {
