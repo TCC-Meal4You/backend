@@ -33,7 +33,7 @@ public class UsuarioAvalia {
     private Restaurante restaurante ;
 
     @Column(name = "nota", nullable = false)
-    private Integer nota;
+    private int nota;
 
     @Column(name = "comentario", nullable = false)
     private String comentario;

@@ -112,9 +112,9 @@ public class UsuarioController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/ver-avaliacoes")
-    public ResponseEntity<List<UsuarioAvaliaResponseDTO>> verAvaliacoes() {
-        List<UsuarioAvaliaResponseDTO> response = usuarioService.verAvaliacoes();
+    @GetMapping("/ver-minhas-avaliacoes")
+    public ResponseEntity<List<UsuarioAvaliaResponseDTO>> verMinhasAvaliacoes() {
+        List<UsuarioAvaliaResponseDTO> response = usuarioService.verMinhasAvaliacoes();
         return ResponseEntity.ok(response);
     }
 

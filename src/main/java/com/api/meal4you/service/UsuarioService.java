@@ -382,7 +382,7 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Você já avaliou este restaurante.");
         }
 
-        if (dto.getNota() == null || dto.getNota() < 0 || dto.getNota() > 5) {
+        if (dto.getNota() < 0 || dto.getNota() > 5) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nota inválida. Deve estar entre 0 e 5.");
         }
 
@@ -405,7 +405,7 @@ public class UsuarioService {
         UsuarioAvalia avaliacao = usuarioAvaliaRepository.findByUsuarioAndRestaurante(usuario, restaurante)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Avaliação não encontrada."));
 
-        if (dto.getNota() == null || dto.getNota() < 0 || dto.getNota() > 5) {
+        if (dto.getNota() < 0 || dto.getNota() > 5) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nota inválida. Deve estar entre 0 e 5.");
         }
 
@@ -435,7 +435,7 @@ public class UsuarioService {
 
     //só ve a propria avaliacao
     @Transactional
-    public List<UsuarioAvaliaResponseDTO> verAvaliacoes() {
+    public List<UsuarioAvaliaResponseDTO> verMinhasAvaliacoes() {
         String emailLogado = getUsuarioLogadoEmail();
         Usuario usuario = usuarioRepository.findByEmail(emailLogado)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));

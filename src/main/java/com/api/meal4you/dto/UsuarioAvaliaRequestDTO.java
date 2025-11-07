@@ -13,7 +13,7 @@ public class UsuarioAvaliaRequestDTO {
     private int idRestaurante;
 
 
-    private Integer nota;
+    private int nota;
 
 
     private String comentario;
