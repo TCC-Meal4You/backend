@@ -4,6 +4,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,11 +19,11 @@ public class UsuarioAvaliaResponseDTO {
     private int idRestaurante;
 
 
-    private Integer nota;
+    private int nota;
 
 
     private String comentario;
 
-
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dataAvaliacao;
 }
