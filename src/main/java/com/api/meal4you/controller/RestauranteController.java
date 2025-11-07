@@ -63,6 +63,12 @@ public class RestauranteController {
         List<UsuarioAvaliaResponseDTO> response = restauranteService.listarAvaliacoesDoMeuRestaurante();
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{id}/avaliacoes")
+    public ResponseEntity<List<UsuarioAvaliaResponseDTO>> listarAvaliacoesPorIdDoRestaurante(@PathVariable int id) {
+        List<UsuarioAvaliaResponseDTO> response = restauranteService.listarAvaliacoesPorIdDoRestaurante(id);
+        return ResponseEntity.ok(response);
+    }
       
     @PostMapping("/{id}/favorito")
     public ResponseEntity<Void> alternarFavorito(@PathVariable int id) {

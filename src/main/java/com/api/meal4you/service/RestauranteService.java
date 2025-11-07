@@ -6,6 +6,7 @@ import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
 import com.api.meal4you.mapper.RestauranteMapper;
+import com.api.meal4you.mapper.UsuarioAvaliaMapper;
 import com.api.meal4you.repository.*;
 import com.api.meal4you.entity.*;
 
@@ -263,19 +264,39 @@ public class RestauranteService {
             String emailAdmLogado = admRestauranteService.getAdmLogadoEmail();
 
             AdmRestaurante admin = admRestauranteRepository.findByEmail(emailAdmLogado)
-                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Administrador não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Administrador não encontrado"));
 
             Restaurante restaurante = restauranteRepository.findByAdmin(admin)
-                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Restaurante não encontrado. Cadastre primeiro"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado. Cadastre primeiro"));
 
-            List<com.api.meal4you.entity.UsuarioAvalia> avaliacoes = usuarioAvaliaRepository.findByRestaurante(restaurante);
+            List<UsuarioAvalia> avaliacoes = usuarioAvaliaRepository.findByRestaurante(restaurante);
 
-            return avaliacoes.stream().map(com.api.meal4you.mapper.UsuarioAvaliaMapper::toResponse).collect(java.util.stream.Collectors.toList());
+            return avaliacoes.stream().map(UsuarioAvaliaMapper::toResponse).collect(Collectors.toList());
 
-        } catch (org.springframework.web.server.ResponseStatusException ex) {
+        } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao listar avaliações do restaurante: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public List<UsuarioAvaliaResponseDTO> listarAvaliacoesPorIdDoRestaurante(int idRestaurante) {
+        try {
+            Restaurante restaurante = restauranteRepository.findById(idRestaurante)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado"));
+
+            List<UsuarioAvalia> avaliacoes = usuarioAvaliaRepository.findByRestaurante(restaurante);
+
+            return avaliacoes.stream().
+                map(UsuarioAvaliaMapper::toResponse)
+                .collect(Collectors.toList());
+
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao listar avaliações do restaurante: " + ex.getMessage());
         }
     }

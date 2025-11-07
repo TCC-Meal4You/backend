@@ -101,14 +101,20 @@ public class UsuarioController {
     }
 
     @PostMapping("/avaliar")
-    public ResponseEntity<UsuarioAvaliaResponseDTO> avaliarRestaurante(@Valid @RequestBody UsuarioAvaliaRequestDTO dto) {
+    public ResponseEntity<UsuarioAvaliaResponseDTO> avaliarRestaurante(@RequestBody UsuarioAvaliaRequestDTO dto) {
         UsuarioAvaliaResponseDTO response = usuarioService.avaliarRestaurante(dto);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/ver-avaliacoes")
-    public ResponseEntity<List<UsuarioAvaliaResponseDTO>> verAvaliacoes() {
-        List<UsuarioAvaliaResponseDTO> response = usuarioService.verAvaliacoes();
+    @PutMapping("/atualizar-avaliacao")
+    public ResponseEntity<UsuarioAvaliaResponseDTO> atualizarAvaliacao(@RequestBody UsuarioAvaliaRequestDTO dto) {
+        UsuarioAvaliaResponseDTO response = usuarioService.atualizarAvaliacao(dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/ver-minhas-avaliacoes")
+    public ResponseEntity<List<UsuarioAvaliaResponseDTO>> verMinhasAvaliacoes() {
+        List<UsuarioAvaliaResponseDTO> response = usuarioService.verMinhasAvaliacoes();
         return ResponseEntity.ok(response);
     }
 

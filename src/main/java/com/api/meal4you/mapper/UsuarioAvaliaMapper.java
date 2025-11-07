@@ -7,14 +7,14 @@ import com.api.meal4you.entity.Usuario;
 import com.api.meal4you.entity.UsuarioAvalia;
 
 public class UsuarioAvaliaMapper {
-    public static UsuarioAvaliaResponseDTO toResponse(UsuarioAvalia entity) {
-        if (entity == null) return null;
+    public static UsuarioAvaliaResponseDTO toResponse(UsuarioAvalia usuarioAvalia) {
+        if (usuarioAvalia == null) return null;
         return UsuarioAvaliaResponseDTO.builder()
-                .idUsuario(entity.getUsuario().getIdUsuario())
-                .idRestaurante(entity.getRestaurante().getIdRestaurante())
-                .nota(entity.getNota())
-                .comentario(entity.getComentario())
-                .dataAvaliacao(entity.getDataAvaliacao())
+                .idUsuario(usuarioAvalia.getUsuario().getIdUsuario())
+                .idRestaurante(usuarioAvalia.getRestaurante().getIdRestaurante())
+                .nota(usuarioAvalia.getNota())
+                .comentario(usuarioAvalia.getComentario())
+                .dataAvaliacao(usuarioAvalia.getDataAvaliacao())
                 .build();
     }
 
@@ -25,7 +25,6 @@ public class UsuarioAvaliaMapper {
                 .restaurante(restaurante)
                 .nota(dto.getNota())
                 .comentario(dto.getComentario())
-                .dataAvaliacao(dto.getDataAvaliacao())
                 .build();
     }
 }
