@@ -2,7 +2,6 @@ package com.api.meal4you.dto;
 
 import lombok.*;
 
-import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -10,9 +9,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class UsuarioAvaliaRequestDTO {
-
-    private int idUsuario;
-
 
     private int idRestaurante;
 
@@ -22,6 +18,4 @@ public class UsuarioAvaliaRequestDTO {
 
     private String comentario;
 
-
-    private LocalDate dataAvaliacao;
 }

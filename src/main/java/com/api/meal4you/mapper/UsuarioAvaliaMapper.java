@@ -25,7 +25,6 @@ public class UsuarioAvaliaMapper {
                 .restaurante(restaurante)
                 .nota(dto.getNota())
                 .comentario(dto.getComentario())
-                .dataAvaliacao(dto.getDataAvaliacao())
                 .build();
     }
 }

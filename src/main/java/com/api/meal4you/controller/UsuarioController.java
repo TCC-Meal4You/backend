@@ -101,8 +101,14 @@ public class UsuarioController {
     }
 
     @PostMapping("/avaliar")
-    public ResponseEntity<UsuarioAvaliaResponseDTO> avaliarRestaurante(@Valid @RequestBody UsuarioAvaliaRequestDTO dto) {
+    public ResponseEntity<UsuarioAvaliaResponseDTO> avaliarRestaurante(@RequestBody UsuarioAvaliaRequestDTO dto) {
         UsuarioAvaliaResponseDTO response = usuarioService.avaliarRestaurante(dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/atualizar-avaliacao")
+    public ResponseEntity<UsuarioAvaliaResponseDTO> atualizarAvaliacao(@RequestBody UsuarioAvaliaRequestDTO dto) {
+        UsuarioAvaliaResponseDTO response = usuarioService.atualizarAvaliacao(dto);
         return ResponseEntity.ok(response);
     }
 

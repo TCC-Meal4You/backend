@@ -18,4 +18,5 @@ public interface UsuarioAvaliaRepository extends JpaRepository<UsuarioAvalia, Us
 
     List<UsuarioAvalia> findByRestaurante(Restaurante restaurante);
 
+    boolean existsByUsuarioAndRestaurante(Usuario usuario, Restaurante restaurante);
 }

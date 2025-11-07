@@ -23,23 +23,23 @@ public class UsuarioAvalia {
     @Id
     @MapsId("usuario")
     @ManyToOne
-    @JoinColumn(name = "id_usuario", nullable = true)
+    @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario ;
 
     @Id
     @MapsId("restaurante")
     @ManyToOne
-    @JoinColumn(name = "id_restaurante", nullable = true )
+    @JoinColumn(name = "id_restaurante", nullable = false )
     private Restaurante restaurante ;
 
-    @Column(name = "nota", nullable = true)
+    @Column(name = "nota", nullable = false)
     private Integer nota;
 
-    @Column(name = "comentario", nullable = true)
+    @Column(name = "comentario", nullable = false)
     private String comentario;
 
     @DateTimeFormat(pattern = "dd/MM/yyyy")
-    @Column(name = "data_avaliacao", nullable = true, columnDefinition = "DATE")
+    @Column(name = "data_avaliacao", nullable = false, columnDefinition = "DATE")
     private LocalDate dataAvaliacao;
 
 }
