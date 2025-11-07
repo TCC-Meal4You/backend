@@ -409,10 +409,22 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nota inválida. Deve estar entre 0 e 5.");
         }
 
-        avaliacao.setNota(dto.getNota());
-        avaliacao.setComentario(dto.getComentario());
-        avaliacao.setDataAvaliacao(LocalDate.now());
-        usuarioAvaliaRepository.save(avaliacao);
+        boolean alterado = false;
+
+        if (avaliacao.getNota() != dto.getNota()) {
+            avaliacao.setNota(dto.getNota());
+            alterado = true;
+        }
+
+        if (!avaliacao.getComentario().equals(dto.getComentario())) {
+            avaliacao.setComentario(dto.getComentario());
+            alterado = true;
+        }
+
+        if (alterado) {
+            avaliacao.setDataAvaliacao(LocalDate.now());
+            usuarioAvaliaRepository.save(avaliacao);
+        }
 
         return UsuarioAvaliaMapper.toResponse(avaliacao);
     }
@@ -433,7 +445,6 @@ public class UsuarioService {
         return UsuarioAvaliaMapper.toResponse(avaliacao);
     }
 
-    //só ve a propria avaliacao
     @Transactional
     public List<UsuarioAvaliaResponseDTO> verMinhasAvaliacoes() {
         String emailLogado = getUsuarioLogadoEmail();
