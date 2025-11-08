@@ -1,6 +1,7 @@
 package com.api.meal4you.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +18,7 @@ import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Ingrediente;
 import com.api.meal4you.entity.Refeicao;
 import com.api.meal4you.entity.SocialLogin;
+import com.api.meal4you.entity.Usuario;
 import com.api.meal4you.mapper.AdmRestauranteMapper;
 import com.api.meal4you.mapper.LoginMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
@@ -28,6 +30,7 @@ import com.api.meal4you.repository.RestauranteFavoritoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 import com.api.meal4you.repository.SocialLoginRepository;
 import com.api.meal4you.repository.UsuarioAvaliaRepository;
+import com.api.meal4you.repository.UsuarioRepository;
 import com.api.meal4you.security.JwtUtil;
 import com.api.meal4you.security.TokenStore;
 
@@ -51,6 +54,7 @@ public class AdmRestauranteService {
     private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
     private final RestauranteFavoritoRepository restauranteFavoritoRepository;
     private final UsuarioAvaliaRepository usuarioAvaliaRepository;
+        private final UsuarioRepository usuarioRepository;
 
     public String getAdmLogadoEmail() {
         try {
@@ -142,8 +146,10 @@ public class AdmRestauranteService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
             }
 
-            if (admRepository.findByEmail(dto.getEmail()).isPresent()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
+            // Isso verifica se já existe uma conta de administrador ou de usuário com esse e-mail cadastrado
+             Optional<Usuario> usuarioExistente = usuarioRepository.findByEmail(dto.getEmail());
+            if (usuarioExistente.isPresent() || admRepository.findByEmail(dto.getEmail()).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado como administrador ou usuário.");
             }
             
             AdmRestaurante adm = AdmRestauranteMapper.toEntity(dto);
@@ -263,12 +269,23 @@ public class AdmRestauranteService {
             String email = googleUser.getEmail();
             String nome = googleUser.getName();
             String googleId = googleUser.getId();
-            System.out.println("debug: " + email + ", " + nome + ", " + googleId);
 
-            // 2. Verificar se já existe AdmRestaurante com esse e-mail
+            // 2. Verificar se já existe um SocialLogin com esse provider e providerId
+            Optional<SocialLogin> socialLoginExistente = socialLoginRepository.findByProviderAndProviderId("google", googleId);
+            if (socialLoginExistente.isPresent()) {
+                SocialLogin sl = socialLoginExistente.get();
+                // Verificar se está vinculado a um Usuario
+                if (sl.getUsuario() != null) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                        "Esta conta Google já está vinculada a uma conta de Usuário.");
+                }
+                // Se está vinculado a um Admin, continuar o fluxo normal
+            }
+
+            // 3. Verificar se já existe AdmRestaurante com esse e-mail
             AdmRestaurante adm = admRepository.findByEmail(email).orElse(null);
             if (adm == null) {
-                // 3. Se não existe, criar novo AdmRestaurante e associar SocialLogin
+                // 4. Se não existe, criar novo AdmRestaurante e associar SocialLogin
                 adm = new AdmRestaurante();
                 adm.setNome(nome);
                 adm.setEmail(email);
@@ -285,7 +302,7 @@ public class AdmRestauranteService {
                 socialLoginRepository.save(socialLogin);
                 adm.getSocialLogins().add(socialLogin);
             } else {
-                // 4. Se já existe, garantir que o SocialLogin está associado
+                // 5. Se já existe, garantir que o SocialLogin está associado
                 boolean hasGoogle = adm.getSocialLogins().stream()
                         .anyMatch(sl -> "google".equals(sl.getProvider()) && googleId.equals(sl.getProviderId()));
                 if (!hasGoogle) {
@@ -300,7 +317,7 @@ public class AdmRestauranteService {
             }
             admRepository.save(adm);
 
-            // 5. Gerar token JWT e retornar
+            // 6. Gerar token JWT e retornar
             String token = jwtUtil.gerarToken(adm.getEmail(), "ADMIN");
             tokenStore.salvarToken(token);
             return LoginMapper.toResponse(adm, token);

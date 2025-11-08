@@ -2,17 +2,8 @@ package com.api.meal4you.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
-
-import com.api.meal4you.dto.*;
-import com.api.meal4you.entity.*;
-import com.api.meal4you.repository.*;
-
-import com.api.meal4you.mapper.UsuarioAvaliaMapper;
-import com.api.meal4you.mapper.LoginMapper;
-import com.api.meal4you.mapper.UsuarioMapper;
-import com.api.meal4you.security.JwtUtil;
-import com.api.meal4you.security.TokenStore;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +11,34 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.api.meal4you.dto.LoginRequestDTO;
+import com.api.meal4you.dto.LoginResponseDTO;
+import com.api.meal4you.dto.UsuarioAvaliaRequestDTO;
+import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
+import com.api.meal4you.dto.UsuarioRequestDTO;
+import com.api.meal4you.dto.UsuarioResponseDTO;
+import com.api.meal4you.dto.UsuarioRestricaoRequestDTO;
+import com.api.meal4you.entity.AdmRestaurante;
+import com.api.meal4you.entity.Restaurante;
+import com.api.meal4you.entity.Restricao;
+import com.api.meal4you.entity.SocialLogin;
+import com.api.meal4you.entity.Usuario;
+import com.api.meal4you.entity.UsuarioAvalia;
+import com.api.meal4you.entity.UsuarioRestricao;
+import com.api.meal4you.mapper.LoginMapper;
+import com.api.meal4you.mapper.UsuarioAvaliaMapper;
+import com.api.meal4you.mapper.UsuarioMapper;
+import com.api.meal4you.repository.AdmRestauranteRepository;
+import com.api.meal4you.repository.RestauranteFavoritoRepository;
+import com.api.meal4you.repository.RestauranteRepository;
+import com.api.meal4you.repository.RestricaoRepository;
+import com.api.meal4you.repository.SocialLoginRepository;
+import com.api.meal4you.repository.UsuarioAvaliaRepository;
+import com.api.meal4you.repository.UsuarioRepository;
+import com.api.meal4you.repository.UsuarioRestricaoRepository;
+import com.api.meal4you.security.JwtUtil;
+import com.api.meal4you.security.TokenStore;
 
 import lombok.RequiredArgsConstructor;
 
@@ -40,6 +59,7 @@ public class UsuarioService {
     private final RestauranteRepository restauranteRepository;
     private final UsuarioAvaliaRepository usuarioAvaliaRepository;
     private final RestauranteFavoritoRepository restauranteFavoritoRepository;
+    private final AdmRestauranteRepository admRepository;
 
     public String getUsuarioLogadoEmail() {
         try {
@@ -108,9 +128,12 @@ public class UsuarioService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Código de verificação inválido ou expirado.");
             }
 
-            if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado");
+            // Isso verifica se já existe uma conta de administrador ou de usuário com esse e-mail cadastrado
+            Optional<AdmRestaurante> administradorExistente = admRepository.findByEmail(dto.getEmail());
+            if (administradorExistente.isPresent() || usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado como administrador ou usuário.");
             }
+
             Usuario usuario = UsuarioMapper.toEntity(dto);
             usuario.setSenha(encoder.encode(usuario.getSenha()));
             usuarioRepository.saveAndFlush(usuario);
@@ -274,10 +297,22 @@ public class UsuarioService {
             String nome = googleUser.getName();
             String googleId = googleUser.getId();
 
-            // 2. Verificar se já existe usuário com esse e-mail
+            // 2. Verificar se já existe um SocialLogin com esse provider e providerId
+            Optional<SocialLogin> socialLoginExistente = socialLoginRepository.findByProviderAndProviderId("google", googleId);
+            if (socialLoginExistente.isPresent()) {
+                SocialLogin sl = socialLoginExistente.get();
+                // Verificar se está vinculado a um Admin
+                if (sl.getAdm() != null) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                        "Esta conta Google já está vinculada a uma conta de Administrador.");
+                }
+                // Se está vinculado a um Usuario, continuar o fluxo normal
+            }
+
+            // 3. Verificar se já existe usuário com esse e-mail
             Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
             if (usuario == null) {
-                // 3. Se não existe, criar novo usuário e associar SocialLogin
+                // 4. Se não existe, criar novo usuário e associar SocialLogin
                 usuario = new Usuario();
                 usuario.setNome(nome);
                 usuario.setEmail(email);
@@ -294,7 +329,7 @@ public class UsuarioService {
                 socialLoginRepository.save(socialLogin);
                 usuario.getSocialLogins().add(socialLogin);
             } else {
-                // 4. Se já existe, garantir que o SocialLogin está associado
+                // 5. Se já existe, garantir que o SocialLogin está associado
                 boolean hasGoogle = usuario.getSocialLogins().stream()
                         .anyMatch(sl -> "google".equals(sl.getProvider()) && googleId.equals(sl.getProviderId()));
                 if (!hasGoogle) {
@@ -309,7 +344,7 @@ public class UsuarioService {
             }
             usuarioRepository.save(usuario);
 
-            // 5. Gerar token JWT e retornar
+            // 6. Gerar token JWT e retornar
             String token = jwtUtil.gerarToken(usuario.getEmail(), "USUARIO");
             tokenStore.salvarToken(token);
             return LoginMapper.toResponse(usuario, token);
