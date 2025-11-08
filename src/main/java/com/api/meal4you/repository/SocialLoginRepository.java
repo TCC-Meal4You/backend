@@ -1,5 +1,7 @@
 package com.api.meal4you.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.api.meal4you.entity.AdmRestaurante;
@@ -11,5 +13,7 @@ public interface SocialLoginRepository extends JpaRepository<SocialLogin, Intege
     void deleteByUsuario(Usuario usuario);
 
     void deleteByAdm(AdmRestaurante adm);
+
+    Optional<SocialLogin> findByProviderAndProviderId(String provider, String providerId);
 
 }
