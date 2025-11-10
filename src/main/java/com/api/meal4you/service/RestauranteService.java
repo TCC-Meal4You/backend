@@ -1,5 +1,6 @@
 package com.api.meal4you.service;
 
+import com.api.meal4you.dto.PesquisaRestauranteResponseDTO;
 import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
@@ -73,9 +74,9 @@ public class RestauranteService {
     }
 
     @Transactional
-    public List<RestauranteFavoritoResponseDTO> listarTodos() {
+    public PesquisaRestauranteResponseDTO listarTodos(Integer numPagina) {
         try {
-            List<Restaurante> restaurantes = restauranteRepository.findAll();
+            List<Restaurante> todosRestaurantes = restauranteRepository.findAll();
             
             String emailLogado = usuarioService.getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
@@ -87,7 +88,20 @@ public class RestauranteService {
                     .map(fav -> fav.getRestaurante().getIdRestaurante())
                     .collect(Collectors.toSet());
             
-            return RestauranteMapper.toUsuarioCardResponseList(restaurantes, idsFavoritados);
+            int tamanhoPagina = 10;
+            int pagina = (numPagina != null && numPagina > 0) ? numPagina : 1;
+            int inicio = (pagina - 1) * tamanhoPagina;
+            int fim = Math.min(inicio + tamanhoPagina, todosRestaurantes.size());
+            
+            int totalPaginas = (int) Math.ceil((double) todosRestaurantes.size() / tamanhoPagina);
+            if (totalPaginas == 0 && todosRestaurantes.size() > 0) {
+                totalPaginas = 1;
+            }
+            
+            List<Restaurante> restaurantesPaginados = todosRestaurantes.subList(inicio, fim);
+            
+            return RestauranteMapper.toPesquisaResponse(restaurantesPaginados, idsFavoritados, totalPaginas);
+            
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao listar restaurantes: " + ex.getMessage());

@@ -1,5 +1,6 @@
 package com.api.meal4you.controller;
 
+import com.api.meal4you.dto.PesquisaRestauranteResponseDTO;
 import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
@@ -29,8 +30,8 @@ public class RestauranteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RestauranteFavoritoResponseDTO>> listarRestaurantes() {
-        List<RestauranteFavoritoResponseDTO> response = restauranteService.listarTodos();
+    public ResponseEntity<PesquisaRestauranteResponseDTO> listarRestaurantes(@RequestParam Integer numPagina) {
+        PesquisaRestauranteResponseDTO response = restauranteService.listarTodos(numPagina);
         return ResponseEntity.ok(response);
     }
 
