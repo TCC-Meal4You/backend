@@ -1,5 +1,14 @@
 package com.api.meal4you.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.api.meal4you.dto.IngredienteRequestDTO;
 import com.api.meal4you.dto.IngredienteResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
@@ -10,19 +19,11 @@ import com.api.meal4you.mapper.IngredienteMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 import com.api.meal4you.repository.IngredienteRepository;
 import com.api.meal4you.repository.IngredienteRestricaoRepository;
+import com.api.meal4you.repository.RefeicaoIngredienteRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 import com.api.meal4you.repository.RestricaoRepository;
-import com.api.meal4you.repository.RefeicaoIngredienteRepository; 
+
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

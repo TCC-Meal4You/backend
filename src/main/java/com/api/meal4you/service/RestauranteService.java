@@ -1,27 +1,41 @@
 package com.api.meal4you.service;
 
-import com.api.meal4you.dto.PesquisaRestauranteResponseDTO;
-import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
-import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
-import com.api.meal4you.dto.RestauranteRequestDTO;
-import com.api.meal4you.dto.RestauranteResponseDTO;
-import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
-import com.api.meal4you.mapper.RestauranteMapper;
-import com.api.meal4you.mapper.UsuarioAvaliaMapper;
-import com.api.meal4you.repository.*;
-import com.api.meal4you.entity.*;
-
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.api.meal4you.dto.PesquisaRestauranteResponseDTO;
+import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
+import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
+import com.api.meal4you.dto.RestauranteRequestDTO;
+import com.api.meal4you.dto.RestauranteResponseDTO;
+import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
+import com.api.meal4you.entity.AdmRestaurante;
+import com.api.meal4you.entity.Ingrediente;
+import com.api.meal4you.entity.Refeicao;
+import com.api.meal4you.entity.Restaurante;
+import com.api.meal4you.entity.RestauranteFavorito;
+import com.api.meal4you.entity.Usuario;
+import com.api.meal4you.entity.UsuarioAvalia;
+import com.api.meal4you.mapper.RestauranteMapper;
+import com.api.meal4you.mapper.UsuarioAvaliaMapper;
+import com.api.meal4you.repository.AdmRestauranteRepository;
+import com.api.meal4you.repository.IngredienteRepository;
+import com.api.meal4you.repository.IngredienteRestricaoRepository;
+import com.api.meal4you.repository.RefeicaoIngredienteRepository;
+import com.api.meal4you.repository.RefeicaoRepository;
+import com.api.meal4you.repository.RestauranteFavoritoRepository;
+import com.api.meal4you.repository.RestauranteRepository;
+import com.api.meal4you.repository.UsuarioAvaliaRepository;
+import com.api.meal4you.repository.UsuarioRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -94,7 +108,7 @@ public class RestauranteService {
             int fim = Math.min(inicio + tamanhoPagina, todosRestaurantes.size());
             
             int totalPaginas = (int) Math.ceil((double) todosRestaurantes.size() / tamanhoPagina);
-            if (totalPaginas == 0 && todosRestaurantes.size() > 0) {
+            if (totalPaginas == 0) {
                 totalPaginas = 1;
             }
             
