@@ -50,16 +50,16 @@ public class SecurityConfig {
                         .requestMatchers("/admins/**").hasRole("ADMIN") // outros métodos
                         
                         //Restaurante
-                        .requestMatchers(HttpMethod.GET, "/restaurantes").hasRole("USUARIO") // listar
-                        .requestMatchers(HttpMethod.GET, "/restaurantes/listar-por-id/{id}").hasRole("USUARIO") // listar por id
                         .requestMatchers(HttpMethod.POST, "/restaurantes").hasRole("ADMIN") // cadastrar
+                        .requestMatchers(HttpMethod.GET, "/restaurantes").hasRole("USUARIO") // listar
                         .requestMatchers(HttpMethod.PUT, "/restaurantes/{id}").hasRole("ADMIN") // atualizar
                         .requestMatchers(HttpMethod.DELETE, "/restaurantes/{id}").hasRole("ADMIN") // deletar
                         .requestMatchers(HttpMethod.GET, "/restaurantes/meu-restaurante").hasRole("ADMIN") // meu restaurante
-                        .requestMatchers(HttpMethod.POST, "/restaurantes/{id}/favorito").hasRole("USUARIO") // favoritar/desfavoritar
-                        .requestMatchers(HttpMethod.GET, "/restaurantes/favoritos").hasRole("USUARIO") // listar favoritos
+                        .requestMatchers(HttpMethod.GET, "/restaurantes/listar-por-id/{id}").hasRole("USUARIO") // listar por id
                         .requestMatchers(HttpMethod.GET, "/restaurantes/avaliacoes").hasRole("ADMIN") // listar avaliações do meu restaurante
                         .requestMatchers(HttpMethod.GET, "/restaurantes/{id}/avaliacoes").hasRole("USUARIO") // listar avaliações por restaurante
+                        .requestMatchers(HttpMethod.POST, "/restaurantes/{id}/favorito").hasRole("USUARIO") // favoritar/desfavoritar
+                        .requestMatchers(HttpMethod.GET, "/restaurantes/favoritos").hasRole("USUARIO") // listar favoritos
 
                         //Refeições
                         .requestMatchers("/refeicoes/**").hasRole("ADMIN") // todos os métodos
