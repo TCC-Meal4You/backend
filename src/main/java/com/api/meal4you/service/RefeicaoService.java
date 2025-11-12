@@ -1,5 +1,6 @@
 package com.api.meal4you.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.api.meal4you.dto.PaginacaoRefeicoesResponseDTO;
 import com.api.meal4you.dto.RefeicaoRequestDTO;
 import com.api.meal4you.dto.RefeicaoResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
@@ -28,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RefeicaoService {
 
+    private final UsuarioService usuarioService;
     private final RefeicaoRepository refeicaoRepository;
     private final AdmRestauranteService admRestauranteService;
     private final AdmRestauranteRepository admRestauranteRepository;
@@ -87,6 +90,45 @@ public class RefeicaoService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Erro ao cadastrar refeição: " + ex.getMessage());
         }
     }
+
+@Transactional
+public PaginacaoRefeicoesResponseDTO listarTodas(Integer numPagina) {
+    try {
+        // A validação de usuário pode ser mantida se for um requisito
+        String emailUsuarioLogado = usuarioService.getUsuarioLogadoEmail();
+        if (emailUsuarioLogado == null || emailUsuarioLogado.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado.");
+        }
+        
+        // Busca todas as refeições disponíveis de uma vez.
+        List<Refeicao> refeicoesDisponiveis = refeicaoRepository.findAllByDisponivelTrue();
+
+        // Lógica de paginação
+        int tamanhoPagina = 10;
+        int pagina = (numPagina != null && numPagina > 0) ? numPagina : 1;
+        int inicio = (pagina - 1) * tamanhoPagina;
+        
+        if (inicio >= refeicoesDisponiveis.size()) {
+            // Retorna uma lista vazia se o número da página for inválido
+            return new PaginacaoRefeicoesResponseDTO(Collections.emptyList(), 0);
+        }
+
+        int fim = Math.min(inicio + tamanhoPagina, refeicoesDisponiveis.size());
+
+        int totalRefeicoesDisponiveis = refeicoesDisponiveis.size();
+        int totalPaginas = (int) Math.ceil((double) totalRefeicoesDisponiveis / tamanhoPagina);
+
+        List<Refeicao> refeicoesPaginadas = refeicoesDisponiveis.subList(inicio, fim);
+
+        // Usa o novo método do mapper
+        return RefeicaoMapper.toPaginacaoResponse(refeicoesPaginadas, totalPaginas);
+
+    } catch (ResponseStatusException ex) {
+        throw ex;
+    } catch (Exception ex) {
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Erro ao listar refeições: " + ex.getMessage());
+    }
+}
 
     @Transactional
     public List<RefeicaoResponseDTO> listarMinhasRefeicoes() {

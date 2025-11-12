@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.api.meal4you.dto.PesquisaRestauranteResponseDTO;
 import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
@@ -79,5 +80,23 @@ public class RestauranteMapper {
                     return RestauranteMapper.toUsuarioCardResponse(restaurante, isFav);
                 })
                 .collect(Collectors.toList());
+    }
+
+    public static PesquisaRestauranteResponseDTO toPesquisaResponse(
+            List<Restaurante> restaurantesPaginados, 
+            Set<Integer> idsFavoritados, 
+            int totalPaginas) {
+        
+        List<RestauranteFavoritoResponseDTO> restaurantes = restaurantesPaginados.stream()
+                .map(restaurante -> {
+                    boolean isFav = idsFavoritados.contains(restaurante.getIdRestaurante());
+                    return RestauranteMapper.toUsuarioCardResponse(restaurante, isFav);
+                })
+                .collect(Collectors.toList());
+        
+        return PesquisaRestauranteResponseDTO.builder()
+                .restaurantes(restaurantes)
+                .totalPaginas(totalPaginas)
+                .build();
     }
 }
