@@ -10,6 +10,8 @@ import com.api.meal4you.entity.Restaurante;
 public interface RefeicaoRepository extends JpaRepository<Refeicao, Integer> {
     List<Refeicao> findByRestaurante(Restaurante restaurante);
 
+    List<Refeicao> findAllByDisponivelTrue();
+
     boolean existsByNomeAndRestaurante(String nome, Restaurante restaurante);
 
     boolean existsByNomeAndRestauranteAndIdRefeicaoNot(String nome, Restaurante restaurante, int idRefeicao);

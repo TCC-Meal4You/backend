@@ -1,26 +1,41 @@
 package com.api.meal4you.service;
 
-import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
-import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
-import com.api.meal4you.dto.RestauranteRequestDTO;
-import com.api.meal4you.dto.RestauranteResponseDTO;
-import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
-import com.api.meal4you.mapper.RestauranteMapper;
-import com.api.meal4you.mapper.UsuarioAvaliaMapper;
-import com.api.meal4you.repository.*;
-import com.api.meal4you.entity.*;
-
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.api.meal4you.dto.PesquisaRestauranteResponseDTO;
+import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
+import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
+import com.api.meal4you.dto.RestauranteRequestDTO;
+import com.api.meal4you.dto.RestauranteResponseDTO;
+import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
+import com.api.meal4you.entity.AdmRestaurante;
+import com.api.meal4you.entity.Ingrediente;
+import com.api.meal4you.entity.Refeicao;
+import com.api.meal4you.entity.Restaurante;
+import com.api.meal4you.entity.RestauranteFavorito;
+import com.api.meal4you.entity.Usuario;
+import com.api.meal4you.entity.UsuarioAvalia;
+import com.api.meal4you.mapper.RestauranteMapper;
+import com.api.meal4you.mapper.UsuarioAvaliaMapper;
+import com.api.meal4you.repository.AdmRestauranteRepository;
+import com.api.meal4you.repository.IngredienteRepository;
+import com.api.meal4you.repository.IngredienteRestricaoRepository;
+import com.api.meal4you.repository.RefeicaoIngredienteRepository;
+import com.api.meal4you.repository.RefeicaoRepository;
+import com.api.meal4you.repository.RestauranteFavoritoRepository;
+import com.api.meal4you.repository.RestauranteRepository;
+import com.api.meal4you.repository.UsuarioAvaliaRepository;
+import com.api.meal4you.repository.UsuarioRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -73,21 +88,34 @@ public class RestauranteService {
     }
 
     @Transactional
-    public List<RestauranteFavoritoResponseDTO> listarTodos() {
+    public PesquisaRestauranteResponseDTO listarTodos(Integer numPagina) {
         try {
-            List<Restaurante> restaurantes = restauranteRepository.findAll();
-            
             String emailLogado = usuarioService.getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
             
+            List<Restaurante> todosRestaurantes = restauranteRepository.findAllByAtivoTrue();
+
             List<RestauranteFavorito> favoritos = restauranteFavoritoRepository.findByUsuario(usuario);
             
             Set<Integer> idsFavoritados = favoritos.stream()
                     .map(fav -> fav.getRestaurante().getIdRestaurante())
                     .collect(Collectors.toSet());
             
-            return RestauranteMapper.toUsuarioCardResponseList(restaurantes, idsFavoritados);
+            int tamanhoPagina = 10;
+            int pagina = (numPagina != null && numPagina > 0) ? numPagina : 1;
+            int inicio = (pagina - 1) * tamanhoPagina;
+            int fim = Math.min(inicio + tamanhoPagina, todosRestaurantes.size());
+            
+            int totalPaginas = (int) Math.ceil((double) todosRestaurantes.size() / tamanhoPagina);
+            if (totalPaginas == 0) {
+                totalPaginas = 1;
+            }
+            
+            List<Restaurante> restaurantesPaginados = todosRestaurantes.subList(inicio, fim);
+            
+            return RestauranteMapper.toPesquisaResponse(restaurantesPaginados, idsFavoritados, totalPaginas);
+            
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao listar restaurantes: " + ex.getMessage());
@@ -216,6 +244,10 @@ public class RestauranteService {
     @Transactional
     public RestaurantePorIdResponseDTO listarPorId(int id, Integer numPagina) {
         try {
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
             Restaurante restaurante = restauranteRepository.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado"));
 
@@ -240,10 +272,6 @@ public class RestauranteService {
             }
 
             List<Refeicao> refeicoesPaginadas = refeicoesDisponiveis.subList(inicio, fim);
-
-            String emailLogado = usuarioService.getUsuarioLogadoEmail();
-            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
             
             Optional<RestauranteFavorito> favorito = restauranteFavoritoRepository.findByUsuarioAndRestaurante(usuario, restaurante);
             boolean isFavorito = favorito.isPresent();
