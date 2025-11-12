@@ -1,14 +1,24 @@
 package com.api.meal4you.controller;
 
-import com.api.meal4you.service.RefeicaoService;
-import com.api.meal4you.dto.AtualizarDisponibilidadeRequestDTO;
-import com.api.meal4you.dto.RefeicaoRequestDTO;
-import com.api.meal4you.dto.RefeicaoResponseDTO;
-
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.api.meal4you.dto.AtualizarDisponibilidadeRequestDTO;
+import com.api.meal4you.dto.PaginacaoRefeicoesResponseDTO;
+import com.api.meal4you.dto.RefeicaoRequestDTO;
+import com.api.meal4you.dto.RefeicaoResponseDTO;
+import com.api.meal4you.service.RefeicaoService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -62,6 +72,23 @@ public class RefeicaoController {
     @GetMapping
     public ResponseEntity<List<RefeicaoResponseDTO>> listarMinhasRefeicoes() {
         List<RefeicaoResponseDTO> response = refeicaoService.listarMinhasRefeicoes();
+        return ResponseEntity.ok(response);
+    }
+
+        @Operation(
+        summary = "Listar todas as refeições disponíveis",
+        description = "Lista todas as refeições disponíveis de 10 em 10 para o usuário final. Utilizado na tela de busca de refeições do aplicativo."
+
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de refeições retornada com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao listar refeições", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/listar-todas")
+    public ResponseEntity<PaginacaoRefeicoesResponseDTO> listarTodas(@RequestParam int pagina) {
+        PaginacaoRefeicoesResponseDTO response = refeicaoService.listarTodas(pagina);
         return ResponseEntity.ok(response);
     }
 
