@@ -90,12 +90,12 @@ public class RestauranteService {
     @Transactional
     public PesquisaRestauranteResponseDTO listarTodos(Integer numPagina) {
         try {
-            List<Restaurante> todosRestaurantes = restauranteRepository.findAll();
-            
             String emailLogado = usuarioService.getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
             
+            List<Restaurante> todosRestaurantes = restauranteRepository.findAllByAtivoTrue();
+
             List<RestauranteFavorito> favoritos = restauranteFavoritoRepository.findByUsuario(usuario);
             
             Set<Integer> idsFavoritados = favoritos.stream()
@@ -244,6 +244,10 @@ public class RestauranteService {
     @Transactional
     public RestaurantePorIdResponseDTO listarPorId(int id, Integer numPagina) {
         try {
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
             Restaurante restaurante = restauranteRepository.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado"));
 
@@ -268,10 +272,6 @@ public class RestauranteService {
             }
 
             List<Refeicao> refeicoesPaginadas = refeicoesDisponiveis.subList(inicio, fim);
-
-            String emailLogado = usuarioService.getUsuarioLogadoEmail();
-            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
             
             Optional<RestauranteFavorito> favorito = restauranteFavoritoRepository.findByUsuarioAndRestaurante(usuario, restaurante);
             boolean isFavorito = favorito.isPresent();
