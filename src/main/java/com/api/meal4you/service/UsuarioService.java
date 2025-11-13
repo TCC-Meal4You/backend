@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
+import com.api.meal4you.dto.RedefinirSenhaRequestDTO;
 import com.api.meal4you.dto.UsuarioAvaliaRequestDTO;
 import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
 import com.api.meal4you.dto.UsuarioRequestDTO;
@@ -98,7 +99,7 @@ public class UsuarioService {
     public void solicitarAlteracaoEmail(String novoEmail) {
         try {
             if (usuarioRepository.findByEmail(novoEmail).isPresent()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Não há alteração, o e-mail é o mesmo.");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Esse e-mail já está em uso.");
             }
 
             String emailLogado = getUsuarioLogadoEmail(); // Pega e-mail do usuário logado
@@ -401,6 +402,54 @@ public class UsuarioService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao fazer logout global: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public void enviarCodigoRedefinicaoSenha(String email) {
+        try {
+            Usuario usuario = usuarioRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "E-mail não encontrado."));
+            
+            if (usuario.getSenha() == null || usuario.getSenha().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                    "Usuário criado via social login. Não é possível redefinir senha.");
+            }
+            
+            String codigo = verificaEmailService.gerarESalvarCodigo(email);
+            
+            String subject = "Meal4You - Código de Redefinição de Senha";
+            String body = "Olá! \n\nEsse é o seu código para redefinir sua senha: \n\n" + codigo + 
+                        "\n\n ATENÇÃO: O CÓDIGO É VÁLIDO SOMENTE POR 5 MINUTOS.";
+            emailCodeSenderService.enviarEmail(email, subject, body);
+            
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao enviar código de redefinição de senha: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public void redefinirSenha(RedefinirSenhaRequestDTO dto) {
+        try {
+            if (!verificaEmailService.validarCodigo(dto.getEmail(), dto.getCodigoVerificacao())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                    "Código de verificação inválido ou expirado.");
+            }
+            
+            Usuario usuario = usuarioRepository.findByEmail(dto.getEmail())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+            
+            usuario.setSenha(encoder.encode(dto.getNovaSenha()));
+            usuarioRepository.save(usuario);
+                
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao redefinir senha: " + ex.getMessage());
         }
     }
 

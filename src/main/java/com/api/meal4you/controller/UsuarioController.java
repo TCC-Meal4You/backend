@@ -229,6 +229,38 @@ public class UsuarioController {
         usuarioService.logoutGlobal();
         return ResponseEntity.ok(Map.of("mensagem", "Logout global realizado com sucesso."));
     }
+    
+    @Operation(
+        summary = "Solicitar redefinição de senha",
+        description = "Envia um código de verificação para o e-mail fornecido para redefinir a senha. Usuários criados via social login não podem redefinir senha. O código expira em 5 minutos."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Código enviado com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Usuário criado via social login não pode redefinir senha", content = @Content),
+        @ApiResponse(responseCode = "404", description = "E-mail não encontrado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao enviar código de redefinição", content = @Content)
+    })
+    @PostMapping("/redefinir-senha/solicitar")
+    public ResponseEntity<Map<String, String>> solicitarRedefinicaoSenha(@RequestParam String email) {
+        usuarioService.enviarCodigoRedefinicaoSenha(email);
+        return ResponseEntity.ok(Map.of("mensagem", "Código de verificação para redefinição de senha enviado para o novo endereço."));
+    }
+
+    @Operation(
+        summary = "Confirmar redefinição de senha",
+        description = "Redefine a senha do usuário usando o código de verificação enviado por e-mail. Após a redefinição, o usuário deverá fazer login novamente com a nova senha."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Senha redefinida com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Código de verificação inválido ou expirado", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao redefinir senha", content = @Content)
+    })
+    @PostMapping("/redefinir-senha/confirmar")
+    public ResponseEntity<Void> confirmarRedefinicaoSenha(@RequestBody @Valid RedefinirSenhaRequestDTO dto) {
+        usuarioService.redefinirSenha(dto);
+        return ResponseEntity.ok().build();
+    }
 
     @Operation(
         summary = "Avaliar restaurante",
