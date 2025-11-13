@@ -14,6 +14,7 @@ import com.api.meal4you.dto.AdmRestauranteRequestDTO;
 import com.api.meal4you.dto.AdmRestauranteResponseDTO;
 import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
+import com.api.meal4you.dto.RedefinirSenhaRequestDTO;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Ingrediente;
 import com.api.meal4you.entity.Refeicao;
@@ -75,7 +76,7 @@ public class AdmRestauranteService {
     public void enviarCodigoVerificacao(String email) {
         try {
             if (admRepository.findByEmail(email).isPresent()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado");
             }
             String codigo = verificaEmailService.gerarESalvarCodigo(email);
             String subject = "Meal4You - Código de Verificação de Administrador";
@@ -93,7 +94,7 @@ public class AdmRestauranteService {
     public void solicitarAlteracaoEmail(String novoEmail) {
         try {
             if (admRepository.findByEmail(novoEmail).isPresent()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Não há alteração, o e-mail é o mesmo.");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Este e-mail já está em uso.");
             }
 
             String emailLogado = getAdmLogadoEmail(); // Pega e-mail do administrador logado
@@ -333,10 +334,10 @@ public class AdmRestauranteService {
     public LoginResponseDTO fazerLogin(LoginRequestDTO dto) {
         try {
             AdmRestaurante adm = admRepository.findByEmail(dto.getEmail())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "E-mail ou senha incorreta"));
 
             if (!encoder.matches(dto.getSenha(), adm.getSenha())) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha incorreta");
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "E-mail ou senha incorreta");
             }
 
             String token = jwtUtil.gerarToken(adm.getEmail(), "ADMIN");
@@ -374,6 +375,55 @@ public class AdmRestauranteService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao fazer logout global: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public void enviarCodigoRedefinicaoSenha(String email) {
+        try {
+            AdmRestaurante adm = admRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "E-mail não encontrado."));
+            
+            if (adm.getSenha() == null || adm.getSenha().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                    "Administrador criado via social login. Não é possível redefinir senha.");
+            }
+            
+            String codigo = verificaEmailService.gerarESalvarCodigo(email);
+            
+            String subject = "Meal4You - Código de Redefinição de Senha";
+            String body = "Olá! \n\nEsse é o seu código para redefinir sua senha: \n\n" + codigo + 
+                        "\n\n ATENÇÃO: O CÓDIGO É VÁLIDO SOMENTE POR 5 MINUTOS.";
+            emailCodeSenderService.enviarEmail(email, subject, body);
+            
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao enviar código de redefinição de senha: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public void redefinirSenha(RedefinirSenhaRequestDTO dto) {
+        try {
+
+            if (!verificaEmailService.validarCodigo(dto.getEmail(), dto.getCodigoVerificacao())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                    "Código de verificação inválido ou expirado.");
+            }
+            
+            AdmRestaurante adm = admRepository.findByEmail(dto.getEmail())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador não encontrado."));
+            
+            adm.setSenha(encoder.encode(dto.getNovaSenha()));
+            admRepository.save(adm);
+                        
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao redefinir senha: " + ex.getMessage());
         }
     }
 }

@@ -19,6 +19,7 @@ import com.api.meal4you.dto.AtualizarEmailRequestDTO;
 import com.api.meal4you.dto.GoogleLoginRequestDTO;
 import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
+import com.api.meal4you.dto.RedefinirSenhaRequestDTO;
 import com.api.meal4you.dto.VerificaEmailRequestDTO;
 import com.api.meal4you.service.AdmRestauranteService;
 
@@ -154,7 +155,7 @@ public class AdmRestauranteController {
         admRestauranteService.deletarMinhaConta(email);
         return ResponseEntity.ok().build();
     }
-
+    
     @Operation(
         summary = "Login de administrador",
         description = "Autentica um administrador de restaurante com e-mail e senha. Retorna um token JWT para ser usado nas requisições autenticadas."
@@ -185,7 +186,7 @@ public class AdmRestauranteController {
         LoginResponseDTO response = admRestauranteService.fazerLoginComGoogle(accessToken);
         return ResponseEntity.ok(response);
     }
-
+    
     @Operation(
         summary = "Logout",
         description = "Invalida o token JWT atual do administrador. O administrador precisará fazer login novamente para obter um novo token."
@@ -201,7 +202,7 @@ public class AdmRestauranteController {
         admRestauranteService.logout(header);
         return ResponseEntity.ok().build();
     }
-
+    
     @Operation(
         summary = "Logout global",
         description = "Invalida todos os tokens JWT ativos do administrador autenticado. Útil para fazer logout de todos os dispositivos."
@@ -215,6 +216,38 @@ public class AdmRestauranteController {
     @PostMapping("/logout-global")
     public ResponseEntity<Void> logoutGlobal() {
         admRestauranteService.logoutGlobal();
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(
+        summary = "Solicitar redefinição de senha",
+        description = "Envia um código de verificação para o e-mail fornecido para redefinir a senha. Administradores criados via social login não podem redefinir senha. O código expira em 5 minutos."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Código enviado com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Administrador criado via social login não pode redefinir senha", content = @Content),
+        @ApiResponse(responseCode = "404", description = "E-mail não encontrado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao enviar código de redefinição", content = @Content)
+    })
+    @PostMapping("/redefinir-senha/solicitar")
+    public ResponseEntity<Map<String, String>> solicitarRedefinicaoSenha(@RequestParam String email) {
+        admRestauranteService.enviarCodigoRedefinicaoSenha(email);
+        return ResponseEntity.ok(Map.of("mensagem", "Código de verificação para redefinição de senha enviado para o novo endereço."));
+    }
+    
+    @Operation(
+        summary = "Confirmar redefinição de senha",
+        description = "Redefine a senha do administrador usando o código de verificação enviado por e-mail. Após a redefinição, o administrador deverá fazer login novamente com a nova senha."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Senha redefinida com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Código de verificação inválido ou expirado", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Administrador não encontrado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao redefinir senha", content = @Content)
+    })
+    @PostMapping("/redefinir-senha/confirmar")
+    public ResponseEntity<Void> confirmarRedefinicaoSenha(@RequestBody @Valid RedefinirSenhaRequestDTO dto) {
+        admRestauranteService.redefinirSenha(dto);
         return ResponseEntity.ok().build();
     }
 }

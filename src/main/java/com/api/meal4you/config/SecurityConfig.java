@@ -40,6 +40,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/usuarios/login/oauth2/google").permitAll() // login social
                         .requestMatchers(HttpMethod.POST, "/usuarios").permitAll() // cadastro
                         .requestMatchers(HttpMethod.POST, "/usuarios/verifica-email").permitAll() // verifica email
+                        .requestMatchers(HttpMethod.POST, "/usuarios/redefinir-senha/solicitar").permitAll() // solicitar redefinir senha
+                        .requestMatchers(HttpMethod.POST, "/usuarios/redefinir-senha/confirmar").permitAll() // confirmar redefinir senha
                         .requestMatchers("/usuarios/**").hasRole("USUARIO") // outros métodos
                         
                         //Admin 
@@ -47,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/admins/login/oauth2/google").permitAll() // login social
                         .requestMatchers(HttpMethod.POST, "/admins").permitAll() // cadastro
                         .requestMatchers(HttpMethod.POST, "/admins/verifica-email").permitAll() // verifica email
+                        .requestMatchers(HttpMethod.POST, "/admins/redefinir-senha/solicitar").permitAll() // solicitar redefinir senha
+                        .requestMatchers(HttpMethod.POST, "/admins/redefinir-senha/confirmar").permitAll() // confirmar redefinir senha
                         .requestMatchers("/admins/**").hasRole("ADMIN") // outros métodos
                         
                         //Restaurante
