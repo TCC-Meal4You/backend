@@ -455,89 +455,117 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioAvaliaResponseDTO avaliarRestaurante(UsuarioAvaliaRequestDTO dto) {
-        String emailLogado = getUsuarioLogadoEmail();
-        Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+        try {
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
-        Restaurante restaurante = restauranteRepository.findById(dto.getIdRestaurante())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado."));
-                
-        if (usuarioAvaliaRepository.existsByUsuarioAndRestaurante(usuario, restaurante)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Você já avaliou este restaurante.");
+            Restaurante restaurante = restauranteRepository.findById(dto.getIdRestaurante())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado."));
+                    
+            if (usuarioAvaliaRepository.existsByUsuarioAndRestaurante(usuario, restaurante)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Você já avaliou este restaurante.");
+            }
+
+            if (dto.getNota() < 0 || dto.getNota() > 5) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nota inválida. Deve estar entre 0 e 5.");
+            }
+
+            UsuarioAvalia avaliacao = UsuarioAvaliaMapper.toEntity(dto, usuario, restaurante);
+            avaliacao.setDataAvaliacao(LocalDate.now());
+            usuarioAvaliaRepository.save(avaliacao);
+
+            return UsuarioAvaliaMapper.toResponse(avaliacao);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao avaliar restaurante: " + ex.getMessage());
         }
-
-        if (dto.getNota() < 0 || dto.getNota() > 5) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nota inválida. Deve estar entre 0 e 5.");
-        }
-
-        UsuarioAvalia avaliacao = UsuarioAvaliaMapper.toEntity(dto, usuario, restaurante);
-        avaliacao.setDataAvaliacao(LocalDate.now());
-        usuarioAvaliaRepository.save(avaliacao);
-
-        return UsuarioAvaliaMapper.toResponse(avaliacao);
     }
 
     @Transactional
     public UsuarioAvaliaResponseDTO atualizarAvaliacao(UsuarioAvaliaRequestDTO dto) {
-        String emailLogado = getUsuarioLogadoEmail();
-        Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+        try {
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
-        Restaurante restaurante = restauranteRepository.findById(dto.getIdRestaurante())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado."));
+            Restaurante restaurante = restauranteRepository.findById(dto.getIdRestaurante())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante não encontrado."));
 
-        UsuarioAvalia avaliacao = usuarioAvaliaRepository.findByUsuarioAndRestaurante(usuario, restaurante)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Avaliação não encontrada."));
+            UsuarioAvalia avaliacao = usuarioAvaliaRepository.findByUsuarioAndRestaurante(usuario, restaurante)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Avaliação não encontrada."));
 
-        if (dto.getNota() < 0 || dto.getNota() > 5) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nota inválida. Deve estar entre 0 e 5.");
+            if (dto.getNota() < 0 || dto.getNota() > 5) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nota inválida. Deve estar entre 0 e 5.");
+            }
+
+            boolean alterado = false;
+
+            if (avaliacao.getNota() != dto.getNota()) {
+                avaliacao.setNota(dto.getNota());
+                alterado = true;
+            }
+
+            if (!avaliacao.getComentario().equals(dto.getComentario())) {
+                avaliacao.setComentario(dto.getComentario());
+                alterado = true;
+            }
+
+            if (alterado) {
+                avaliacao.setDataAvaliacao(LocalDate.now());
+                usuarioAvaliaRepository.save(avaliacao);
+            }
+
+            return UsuarioAvaliaMapper.toResponse(avaliacao);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao atualizar avaliação: " + ex.getMessage());
         }
-
-        boolean alterado = false;
-
-        if (avaliacao.getNota() != dto.getNota()) {
-            avaliacao.setNota(dto.getNota());
-            alterado = true;
-        }
-
-        if (!avaliacao.getComentario().equals(dto.getComentario())) {
-            avaliacao.setComentario(dto.getComentario());
-            alterado = true;
-        }
-
-        if (alterado) {
-            avaliacao.setDataAvaliacao(LocalDate.now());
-            usuarioAvaliaRepository.save(avaliacao);
-        }
-
-        return UsuarioAvaliaMapper.toResponse(avaliacao);
     }
 
     @Transactional
     public UsuarioAvaliaResponseDTO deletarAvaliacao(Integer idRestaurante) {
-        String emailLogado = getUsuarioLogadoEmail();
-        Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+        try {
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
-        Restaurante restaurante = restauranteRepository.findById(idRestaurante)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restaurante não encontrado."));
+            Restaurante restaurante = restauranteRepository.findById(idRestaurante)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restaurante não encontrado."));
 
-        UsuarioAvalia avaliacao = usuarioAvaliaRepository.findByUsuarioAndRestaurante(usuario, restaurante)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Avaliação não encontrada."));
+            UsuarioAvalia avaliacao = usuarioAvaliaRepository.findByUsuarioAndRestaurante(usuario, restaurante)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Avaliação não encontrada."));
 
-        usuarioAvaliaRepository.delete(avaliacao);
-        return UsuarioAvaliaMapper.toResponse(avaliacao);
+            usuarioAvaliaRepository.delete(avaliacao);
+            return UsuarioAvaliaMapper.toResponse(avaliacao);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao deletar avaliação: " + ex.getMessage());
+        }
     }
 
     @Transactional
     public List<UsuarioAvaliaResponseDTO> verMinhasAvaliacoes() {
-        String emailLogado = getUsuarioLogadoEmail();
-        Usuario usuario = usuarioRepository.findByEmail(emailLogado)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+        try {
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
-        List<UsuarioAvalia> avaliacoes = usuarioAvaliaRepository.findByUsuario(usuario);
-        return avaliacoes.stream()
-                .map(UsuarioAvaliaMapper::toResponse)
-                .collect(Collectors.toList());
+            List<UsuarioAvalia> avaliacoes = usuarioAvaliaRepository.findByUsuario(usuario);
+            return avaliacoes.stream()
+                    .map(UsuarioAvaliaMapper::toResponse)
+                    .collect(Collectors.toList());
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao buscar avaliações: " + ex.getMessage());
+        }
     }
 }
