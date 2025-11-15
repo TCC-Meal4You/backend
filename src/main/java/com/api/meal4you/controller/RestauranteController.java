@@ -1,18 +1,26 @@
 package com.api.meal4you.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.api.meal4you.dto.PesquisaRestauranteResponseDTO;
+import com.api.meal4you.dto.PesquisarRestauranteComFiltroRequestDTO;
 import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
 import com.api.meal4you.service.RestauranteService;
-import lombok.RequiredArgsConstructor;
-
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,6 +28,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/restaurantes")
@@ -145,6 +154,23 @@ public class RestauranteController {
     @GetMapping("/listar-por-id/{id}")
     public ResponseEntity<RestaurantePorIdResponseDTO> listarPorId(@PathVariable int id, @RequestParam Integer numPagina) {
         RestaurantePorIdResponseDTO response = restauranteService.listarPorId(id, numPagina);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Pesquisar restaurantes com filtro",
+        description = "Isso permite aos usuários pesquisar restaurantes com base em critérios específicos, como nome, descrição ou tipo de comida. Retorna uma lista paginada de restaurantes que correspondem aos filtros fornecidos. Cada página contém 10 restaurantes.\n" +
+                      "Utilizado na tela de busca com filtros. Método para usuários."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de restaurantes filtrada retornada com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao filtrar e listar restaurantes", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/pesquisar-com-filtro")
+    public ResponseEntity<PesquisaRestauranteResponseDTO> pesquisarComFiltro(@RequestBody PesquisarRestauranteComFiltroRequestDTO dto,@RequestParam Integer numPagina) {
+        PesquisaRestauranteResponseDTO response = restauranteService.pesquisarComFiltro(dto, numPagina);
         return ResponseEntity.ok(response);
     }
 

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.api.meal4you.dto.AtualizarDisponibilidadeRequestDTO;
 import com.api.meal4you.dto.PaginacaoRefeicoesResponseDTO;
+import com.api.meal4you.dto.PesquisarRefeicaoComFiltroRequestDTO;
 import com.api.meal4you.dto.RefeicaoRequestDTO;
 import com.api.meal4you.dto.RefeicaoResponseDTO;
 import com.api.meal4you.service.RefeicaoService;
@@ -89,6 +90,23 @@ public class RefeicaoController {
     @GetMapping("/listar-todas")
     public ResponseEntity<PaginacaoRefeicoesResponseDTO> listarTodas(@RequestParam int pagina) {
         PaginacaoRefeicoesResponseDTO response = refeicaoService.listarTodas(pagina);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Pesquisar refeições com filtro",
+        description = "Isso permite aos usuários pesquisar refeições com base em critérios específicos, como nome, descrição ou tipo de comida. Retorna uma lista paginada de refeições que correspondem aos filtros fornecidos. Cada página contém 10 refeições.\n" +
+                      "Utilizado na tela de busca com filtros. Método para usuários."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de refeições filtrada retornada com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao filtrar e listar refeições", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/pesquisar-com-filtro")
+    public ResponseEntity<PaginacaoRefeicoesResponseDTO> pesquisarComFiltro(@RequestBody PesquisarRefeicaoComFiltroRequestDTO dto,@RequestParam Integer numPagina) {
+        PaginacaoRefeicoesResponseDTO response = refeicaoService.pesquisarComFiltro(dto, numPagina);
         return ResponseEntity.ok(response);
     }
 
