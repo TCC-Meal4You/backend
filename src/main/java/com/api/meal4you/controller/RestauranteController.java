@@ -157,7 +157,7 @@ public class RestauranteController {
         return ResponseEntity.ok(response);
     }
 
-        @Operation(
+    @Operation(
         summary = "Pesquisar restaurantes com filtro",
         description = "Isso permite aos usuários pesquisar restaurantes com base em critérios específicos, como nome, descrição ou tipo de comida. Retorna uma lista paginada de restaurantes que correspondem aos filtros fornecidos. Cada página contém 10 restaurantes.\n" +
                       "Utilizado na tela de busca com filtros. Método para usuários."
