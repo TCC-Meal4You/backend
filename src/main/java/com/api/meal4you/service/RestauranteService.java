@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.api.meal4you.dto.PesquisaRestauranteResponseDTO;
+import com.api.meal4you.dto.PesquisarRestauranteComFiltroRequestDTO;
 import com.api.meal4you.dto.RestauranteFavoritoResponseDTO;
 import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
@@ -283,6 +284,60 @@ public class RestauranteService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao buscar restaurante por ID: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public PesquisaRestauranteResponseDTO pesquisarComFiltro(PesquisarRestauranteComFiltroRequestDTO dto, Integer numPagina) {
+        try {
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+            
+            List<Restaurante> todosRestaurantes = restauranteRepository.findAllByAtivoTrue();
+                    
+            final String termoBusca = dto.getNomeOuDescricao() != null ? dto.getNomeOuDescricao().toLowerCase() : null;
+            final String tipoComidaFiltro = dto.getTipoComida() != null ? dto.getTipoComida().toLowerCase() : null;
+                    
+            List<Restaurante> restaurantesFiltrados = todosRestaurantes.stream()
+                    .filter(r -> {
+                        // Filtro por nome OU descrição
+                        boolean matchNomeOuDescricao = (termoBusca == null || termoBusca.isBlank()) ||
+                                                        (r.getNome().toLowerCase().contains(termoBusca) ||
+                                                         r.getDescricao().toLowerCase().contains(termoBusca));
+                    
+                        // Filtro por tipo de comida
+                        boolean matchTipoComida = (tipoComidaFiltro == null || tipoComidaFiltro.isBlank()) ||
+                                                  r.getTipoComida().toLowerCase().contains(tipoComidaFiltro);
+                    
+                        // Lógica "E": o restaurante deve atender a ambos os critérios
+                        return matchNomeOuDescricao && matchTipoComida;
+                    })
+                    .collect(Collectors.toList());
+
+            List<RestauranteFavorito> favoritos = restauranteFavoritoRepository.findByUsuario(usuario);
+            
+            Set<Integer> idsFavoritados = favoritos.stream()
+                    .map(fav -> fav.getRestaurante().getIdRestaurante())
+                    .collect(Collectors.toSet());
+            
+            int tamanhoPagina = 10;
+            int pagina = (numPagina != null && numPagina > 0) ? numPagina : 1;
+            int inicio = (pagina - 1) * tamanhoPagina;
+            int fim = Math.min(inicio + tamanhoPagina, restaurantesFiltrados.size());
+            
+            int totalPaginas = (int) Math.ceil((double) restaurantesFiltrados.size() / tamanhoPagina);
+            if (totalPaginas == 0) {
+                totalPaginas = 1;
+            }
+            
+            List<Restaurante> restaurantesPaginados = restaurantesFiltrados.subList(inicio, fim);
+            
+            return RestauranteMapper.toPesquisaResponse(restaurantesPaginados, idsFavoritados, totalPaginas);
+            
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao filtrar e listar restaurantes: " + ex.getMessage());
         }
     }
 
