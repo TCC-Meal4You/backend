@@ -10,7 +10,19 @@ import lombok.*;
 public class RestauranteRequestDTO {
     private String nome;
 
-    private String localizacao;
+    private String cep;
+
+    private String logradouro;
+    
+    private int numero;
+
+    private String complemento;
+
+    private String bairro;
+
+    private String cidade;
+
+    private String uf;
 
     private String descricao;
 

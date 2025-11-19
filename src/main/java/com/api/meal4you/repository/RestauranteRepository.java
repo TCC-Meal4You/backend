@@ -9,7 +9,7 @@ import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Restaurante;
 
 public interface RestauranteRepository extends JpaRepository<Restaurante, Integer> {
-    Optional<Restaurante> findByNomeAndLocalizacao(String nome, String localizacao);
+    Optional<Restaurante> findByNomeAndCepAndNumero(String nome, String cep, int numero);
 
     Optional<Restaurante> findByAdmin(AdmRestaurante admin);
 
