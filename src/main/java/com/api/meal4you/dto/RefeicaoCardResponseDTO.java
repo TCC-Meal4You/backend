@@ -14,10 +14,16 @@ import java.util.List;
 @Builder
 public class RefeicaoCardResponseDTO {
     private int idRefeicao;
+    
     private int idRestaurante;
+
     private String nome;
+
     private String descricao;
+
     private String tipo;
+
     private BigDecimal preco;
+
     private List<RestricaoResponseDTO> restricoes;
 }
