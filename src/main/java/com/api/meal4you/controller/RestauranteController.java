@@ -20,7 +20,9 @@ import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
+import com.api.meal4you.dto.ViaCepResponseDTO;
 import com.api.meal4you.service.RestauranteService;
+import com.api.meal4you.service.ViaCepService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -37,16 +39,18 @@ import lombok.RequiredArgsConstructor;
 public class RestauranteController {
 
     private final RestauranteService restauranteService;
+    private final ViaCepService viaCepService;
 
     @Operation(
         summary = "Cadastrar restaurante",
-        description = "Cria um novo restaurante vinculado ao administrador autenticado. O administrador só pode ter um restaurante cadastrado. A combinação de nome e localização deve ser única.\n" +
+        description = "Cria um novo restaurante vinculado ao administrador autenticado. O administrador só pode ter um restaurante cadastrado. A combinação de nome e localização deve ser única.\n" + 
+                      "O backend valida automaticamente se os dados do endereço correspondem ao CEP informado consultando a API ViaCEP.\n" +
                       "Utilizado na tela para cadastro de restaurante.\n " +
                       "Método para administradores."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Restaurante cadastrado com sucesso"),
-        @ApiResponse(responseCode = "400", description = "Já existe um restaurante com esse nome e localização", content = @Content),
+        @ApiResponse(responseCode = "400", description = "Já existe um restaurante com esse nome e localização OU os dados do endereço não correspondem ao CEP informado", content = @Content),
         @ApiResponse(responseCode = "401", description = "Administrador não autenticado", content = @Content),
         @ApiResponse(responseCode = "500", description = "Erro ao cadastrar restaurante", content = @Content)
     })
@@ -77,13 +81,13 @@ public class RestauranteController {
 
     @Operation(
         summary = "Atualizar restaurante",
-        description = "Atualiza as informações de um restaurante. Apenas o administrador dono do restaurante pode atualizá-lo.\n" +
+        description = "Atualiza as informações de um restaurante. Apenas o administrador dono do restaurante pode atualizá-lo. Se o CEP for alterado, o backend valida automaticamente se os dados do endereço correspondem ao novo CEP consultando a API ViaCEP.\n" +
                        "Utilizado na tela de configurações do restaurante.\n " +
                        "Método para administradores."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Restaurante atualizado com sucesso"),
-        @ApiResponse(responseCode = "400", description = "Nenhuma alteração detectada", content = @Content),
+        @ApiResponse(responseCode = "400", description = "Nenhuma alteração detectada OU os dados do endereço não correspondem ao CEP informado", content = @Content),
         @ApiResponse(responseCode = "401", description = "Administrador não autenticado", content = @Content),
         @ApiResponse(responseCode = "403", description = "Administrador não pode acessar restaurante de outro administrador", content = @Content),
         @ApiResponse(responseCode = "404", description = "Restaurante não encontrado", content = @Content),
@@ -246,6 +250,25 @@ public class RestauranteController {
     @GetMapping("/favoritos")
     public ResponseEntity<List<RestauranteFavoritoResponseDTO>> listarRestaurantesFavoritos() {
         List<RestauranteFavoritoResponseDTO> response = restauranteService.listarRestaurantesFavoritos();
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Buscar endereço via CEP",
+        description = "Busca o endereço correspondente ao CEP fornecido utilizando o serviço ViaCEP.\n" +
+                      "Utilizado na tela de cadastro e atualização de restaurante para preencher automaticamente os campos de endereço com base no CEP informado.\n " +
+                      "Método para administradores."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Endereço retornado com sucesso"),
+        @ApiResponse(responseCode = "400", description = "CEP inválido ou não encontrado", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Administrador não autenticado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao buscar endereço", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/{cep}")
+    public ResponseEntity<ViaCepResponseDTO> buscarEndereco(@PathVariable String cep) {
+        ViaCepResponseDTO response = viaCepService.buscarEnderecoPorCep(cep);
         return ResponseEntity.ok(response);
     }
 }

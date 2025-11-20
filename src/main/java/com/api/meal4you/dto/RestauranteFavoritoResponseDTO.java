@@ -12,8 +12,10 @@ public class RestauranteFavoritoResponseDTO {
 
     private String nome;
 
-    private String localizacao;
+    private String bairro;
 
+    private String uf;
+    
     private String descricao;
 
     private String tipoComida;

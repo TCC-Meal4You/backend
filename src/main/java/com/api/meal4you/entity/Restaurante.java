@@ -27,7 +27,7 @@ import lombok.Setter;
 @Entity
 @Table(
     name="restaurante",
-    uniqueConstraints = @UniqueConstraint(columnNames ={"nome", "localizacao"})
+    uniqueConstraints = @UniqueConstraint(columnNames ={"nome", "cep","numero"})
 )
 public class Restaurante {
     
@@ -41,9 +41,36 @@ public class Restaurante {
     private String nome;
 
     @NotBlank
+    @Size(min = 8, max = 8)
+    @Column(length = 8)
+    private String cep;
+
+    @NotBlank
     @Size(min = 4, max = 200)
     @Column(length = 200)
-    private String localizacao;
+    private String logradouro;
+
+    @NotNull
+    private int numero;
+
+    @Size(max = 30)
+    @Column(length = 30)
+    private String complemento;
+
+    @NotBlank
+    @Size(min = 2, max = 60)
+    @Column(length = 60)
+    private String bairro;
+
+    @NotBlank
+    @Size(min = 2, max = 2)
+    @Column(length = 2)
+    private String uf;
+
+    @NotBlank
+    @Size(min = 2, max = 60)
+    @Column(length = 60)
+    private String cidade;
 
     @NotBlank
     @Size(min = 30, max = 200)

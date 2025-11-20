@@ -17,6 +17,7 @@ import com.api.meal4you.dto.RestaurantePorIdResponseDTO;
 import com.api.meal4you.dto.RestauranteRequestDTO;
 import com.api.meal4you.dto.RestauranteResponseDTO;
 import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
+import com.api.meal4you.dto.ViaCepResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Ingrediente;
 import com.api.meal4you.entity.Refeicao;
@@ -53,6 +54,7 @@ public class RestauranteService {
     private final UsuarioService usuarioService;
     private final UsuarioRepository usuarioRepository;
     private final RestauranteFavoritoRepository restauranteFavoritoRepository;
+    private final ViaCepService viaCepService;
 
     private void verificarRestauranteDoAdmLogado(Restaurante restaurante, String emailAdmLogado) {
         if (!restaurante.getAdmin().getEmail().equals(emailAdmLogado)) {
@@ -69,7 +71,18 @@ public class RestauranteService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                             "Administrador não autenticado."));
 
-            boolean existe = restauranteRepository.findByNomeAndLocalizacao(dto.getNome(), dto.getLocalizacao())
+            ViaCepResponseDTO enderecoViaCep = viaCepService.buscarEnderecoPorCep(dto.getCep());
+            if (enderecoViaCep != null) {
+                if (!dto.getLogradouro().equalsIgnoreCase(enderecoViaCep.getLogradouro()) ||
+                    !dto.getBairro().equalsIgnoreCase(enderecoViaCep.getBairro()) ||
+                    !dto.getCidade().equalsIgnoreCase(enderecoViaCep.getLocalidade()) ||
+                    !dto.getUf().equalsIgnoreCase(enderecoViaCep.getUf())) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Os dados do endereço não correspondem ao CEP informado. Verifique as informações.");
+                }
+            }
+
+            boolean existe = restauranteRepository.findByNomeAndCepAndNumero(dto.getNome(), dto.getCep(), dto.getNumero())
                     .isPresent();
             if (existe) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -134,14 +147,38 @@ public class RestauranteService {
 
             boolean alterado = false;
 
+            if (dto.getCep() != null && !dto.getCep().isBlank() && !dto.getCep().equals(restaurante.getCep())) {
+                ViaCepResponseDTO enderecoViaCep = viaCepService.buscarEnderecoPorCep(dto.getCep());
+                if (enderecoViaCep != null) {
+                    if (!dto.getLogradouro().equalsIgnoreCase(enderecoViaCep.getLogradouro()) ||
+                        !dto.getBairro().equalsIgnoreCase(enderecoViaCep.getBairro()) ||
+                        !dto.getCidade().equalsIgnoreCase(enderecoViaCep.getLocalidade()) ||
+                        !dto.getUf().equalsIgnoreCase(enderecoViaCep.getUf())) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                "Os dados do endereço não correspondem ao CEP informado. Verifique as informações.");
+                    }
+                }
+                
+                restaurante.setCep(dto.getCep());
+                restaurante.setLogradouro(dto.getLogradouro());
+                restaurante.setBairro(dto.getBairro());
+                restaurante.setCidade(dto.getCidade());
+                restaurante.setUf(dto.getUf());
+                alterado = true;
+            }
+
             if (dto.getNome() != null && !dto.getNome().isBlank() && !dto.getNome().equals(restaurante.getNome())) {
                 restaurante.setNome(dto.getNome());
                 alterado = true;
             }
+                
+            if (dto.getNumero() != 0 && dto.getNumero() != restaurante.getNumero()) {
+                restaurante.setNumero(dto.getNumero());
+                alterado = true;
+            }
 
-            if (dto.getLocalizacao() != null && !dto.getLocalizacao().isBlank()
-                    && !dto.getLocalizacao().equals(restaurante.getLocalizacao())) {
-                restaurante.setLocalizacao(dto.getLocalizacao());
+            if (dto.getComplemento() != null && !dto.getComplemento().equals(restaurante.getComplemento())) {
+                restaurante.setComplemento(dto.getComplemento());
                 alterado = true;
             }
 
