@@ -41,8 +41,8 @@ public class Restaurante {
     private String nome;
 
     @NotBlank
-    @Size(min = 8, max = 8)
-    @Column(length = 8)
+    @Size(min = 9, max = 9)
+    @Column(length = 9)
     private String cep;
 
     @NotBlank
