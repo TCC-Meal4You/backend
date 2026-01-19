@@ -13,7 +13,7 @@ public class SincronizacaoScheduler {
 
     private final RestricaoService restricaoService;
 
-    @Scheduled(cron = "0 0 3 * * SUN")
+    @Scheduled(cron = "0 0 3 1 JAN,JUL ?")
     public void executarSincronizacaoAgendada() {
         restricaoService.sincronizarComIA();
     }
