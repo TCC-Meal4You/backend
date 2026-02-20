@@ -78,8 +78,8 @@ public class Restaurante {
     private String descricao;
 
     @NotBlank
-    @Size(min = 3, max = 100)
-    @Column(length = 100)
+    @Size(min = 3, max = 255)
+    @Column(length = 255)
     private String tipoComida;
 
     @NotNull
