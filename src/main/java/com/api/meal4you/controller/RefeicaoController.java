@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.api.meal4you.dto.AtualizarDisponibilidadeRequestDTO;
 import com.api.meal4you.dto.PaginacaoRefeicoesResponseDTO;
 import com.api.meal4you.dto.PesquisarRefeicaoComFiltroRequestDTO;
+import com.api.meal4you.dto.RefeicaoAvaliaRequestDTO;
+import com.api.meal4you.dto.RefeicaoAvaliaResponseDTO;
+import com.api.meal4you.dto.RefeicaoFavoritoResponseDTO;
 import com.api.meal4you.dto.RefeicaoRequestDTO;
 import com.api.meal4you.dto.RefeicaoResponseDTO;
 import com.api.meal4you.service.RefeicaoService;
@@ -172,6 +175,115 @@ public class RefeicaoController {
             return ResponseEntity.badRequest().build();
         }
         RefeicaoResponseDTO response = refeicaoService.atualizarDisponibilidade(id, dto.getDisponivel());
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Avaliar refeição",
+        description = "Cria uma nova avaliação para uma refeição. O usuário só pode avaliar cada refeição uma vez. Nota deve estar entre 0 e 5."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Avaliação criada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Nota inválida (deve estar entre 0 e 5)", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Refeição não encontrada", content = @Content),
+        @ApiResponse(responseCode = "409", description = "Usuário já avaliou esta refeição", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao criar avaliação", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/avaliar")
+    public ResponseEntity<RefeicaoAvaliaResponseDTO> avaliarRefeicao(@RequestBody RefeicaoAvaliaRequestDTO dto) {
+        RefeicaoAvaliaResponseDTO response = refeicaoService.avaliarRefeicao(dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Atualizar avaliação da refeição",
+        description = "Atualiza uma avaliação existente do usuário. A data da avaliação será atualizada para a data atual."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Avaliação atualizada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Nota inválida (deve estar entre 0 e 5)", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Refeição ou avaliação não encontrados", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao atualizar avaliação", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @PutMapping("/atualizar-avaliacao")
+    public ResponseEntity<RefeicaoAvaliaResponseDTO> atualizarAvaliacaoRefeicao(@RequestBody RefeicaoAvaliaRequestDTO dto) {
+        RefeicaoAvaliaResponseDTO response = refeicaoService.atualizarAvaliacaoRefeicao(dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Listar avaliações de uma refeição",
+        description = "Retorna todas as avaliações feitas por usuários em uma refeição específica.\n" +
+                      "Utilizado na tela de detalhes na aba avaliações da refeição.\n " +
+                      "Método para usuários."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de avaliações retornada com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Refeição não encontrada", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao listar avaliações", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/{id}/avaliacoes")
+    public ResponseEntity<List<RefeicaoAvaliaResponseDTO>> listarAvaliacoesPorIdRefeicao(@PathVariable int id) {
+        List<RefeicaoAvaliaResponseDTO> response = refeicaoService.listarAvaliacoesPorIdRefeicao(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Ver minhas avaliações de refeições",
+        description = "Retorna todas as avaliações de todas as refeições feitas pelo usuário autenticado."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de avaliações retornada com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao buscar avaliações", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/minhas-avaliacoes")
+    public ResponseEntity<List<RefeicaoAvaliaResponseDTO>> listarMinhasAvaliacoes() {
+        List<RefeicaoAvaliaResponseDTO> response = refeicaoService.listarMinhasAvaliacoes();
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Alternar favorito da refeição",
+        description = "Adiciona ou remove uma refeição dos favoritos do usuário autenticado. Se a refeição já for favorita, será removida. Se não for favorita, será adicionada.\n" +
+                      "Utilizado em várias telas do aplicativo.\n " +
+                      "Método para usuários."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Favorito alternado com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Refeição não encontrada", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao alternar favorito", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/{id}/favorito")
+    public ResponseEntity<Void> alternarFavoritoRefeicao(@PathVariable int id) {
+        refeicaoService.alternarFavoritoRefeicao(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(
+        summary = "Listar minhas refeições favoritas",
+        description = "Retorna a lista de todas as refeições marcadas como favoritas pelo usuário autenticado.\n" +
+                      "Utilizado na tela de favoritos.\n " +
+                      "Método para usuários."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de favoritos retornada com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao listar favoritos", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/favoritos")
+    public ResponseEntity<List<RefeicaoFavoritoResponseDTO>> listarRefeicoesFavoritas() {
+        List<RefeicaoFavoritoResponseDTO> response = refeicaoService.listarRefeicoesFavoritas();
         return ResponseEntity.ok(response);
     }
 }

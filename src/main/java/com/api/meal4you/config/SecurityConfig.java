@@ -70,7 +70,13 @@ public class SecurityConfig {
                         //Refeições
                         .requestMatchers("/refeicoes/listar-todas").hasRole("USUARIO") // listar todas as refeições disponíveis
                         .requestMatchers(HttpMethod.POST, "/refeicoes/pesquisar-com-filtro").hasRole("USUARIO") // pesquisar REFEIÇÕES com filtro
-                        .requestMatchers("/refeicoes/**").hasRole("ADMIN") // todos os métodos
+                        .requestMatchers(HttpMethod.POST, "/refeicoes/avaliar").hasRole("USUARIO") // avaliar refeição
+                        .requestMatchers(HttpMethod.PUT, "/refeicoes/atualizar-avaliacao").hasRole("USUARIO") // atualizar avaliação de refeição
+                        .requestMatchers(HttpMethod.GET, "/refeicoes/{id}/avaliacoes").hasAnyRole("ADMIN", "USUARIO") // listar avaliações de uma refeição
+                        .requestMatchers(HttpMethod.GET, "/refeicoes/minhas-avaliacoes").hasRole("USUARIO") // listar minhas avaliações de refeições
+                        .requestMatchers(HttpMethod.POST, "/refeicoes/{id}/favorito").hasRole("USUARIO") // favoritar/desfavoritar refeição
+                        .requestMatchers(HttpMethod.GET, "/refeicoes/favoritos").hasRole("USUARIO") // listar refeições favoritas
+                        .requestMatchers("/refeicoes/**").hasRole("ADMIN") // todos os outros métodos (admin)
 
                         //Ingredientes
                         .requestMatchers("/ingredientes/**").hasRole("ADMIN") // todos os métodos
