@@ -1,8 +1,10 @@
 package com.api.meal4you.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -13,18 +15,27 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.api.meal4you.dto.PaginacaoRefeicoesResponseDTO;
 import com.api.meal4you.dto.PesquisarRefeicaoComFiltroRequestDTO;
+import com.api.meal4you.dto.RefeicaoAvaliaRequestDTO;
+import com.api.meal4you.dto.RefeicaoAvaliaResponseDTO;
+import com.api.meal4you.dto.RefeicaoFavoritoResponseDTO;
 import com.api.meal4you.dto.RefeicaoRequestDTO;
 import com.api.meal4you.dto.RefeicaoResponseDTO;
 import com.api.meal4you.entity.AdmRestaurante;
 import com.api.meal4you.entity.Ingrediente;
 import com.api.meal4you.entity.Refeicao;
+import com.api.meal4you.entity.RefeicaoAvalia;
+import com.api.meal4you.entity.RefeicaoFavorito;
 import com.api.meal4you.entity.RefeicaoIngrediente;
 import com.api.meal4you.entity.Restaurante;
 import com.api.meal4you.entity.Usuario;
 import com.api.meal4you.entity.UsuarioRestricao;
+import com.api.meal4you.mapper.RefeicaoAvaliaMapper;
+import com.api.meal4you.mapper.RefeicaoFavoritoMapper;
 import com.api.meal4you.mapper.RefeicaoMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 import com.api.meal4you.repository.IngredienteRepository;
+import com.api.meal4you.repository.RefeicaoAvaliaRepository;
+import com.api.meal4you.repository.RefeicaoFavoritoRepository;
 import com.api.meal4you.repository.RefeicaoIngredienteRepository;
 import com.api.meal4you.repository.RefeicaoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
@@ -44,6 +55,8 @@ public class RefeicaoService {
     private final IngredienteRepository ingredienteRepository;
     private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
     private final UsuarioRepository usuarioRepository;
+    private final RefeicaoAvaliaRepository refeicaoAvaliaRepository;
+    private final RefeicaoFavoritoRepository refeicaoFavoritoRepository;
 
     
     @Transactional
@@ -385,6 +398,166 @@ public class RefeicaoService {
             throw ex;
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Erro ao atualizar disponibilidade: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public RefeicaoAvaliaResponseDTO avaliarRefeicao(RefeicaoAvaliaRequestDTO dto) {
+        try {
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            Refeicao refeicao = refeicaoRepository.findById(dto.getIdRefeicao())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Refeição não encontrada."));
+                    
+            if (refeicaoAvaliaRepository.existsByUsuarioAndRefeicao(usuario, refeicao)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Você já avaliou esta refeição.");
+            }
+
+            if (dto.getNota() < 0 || dto.getNota() > 5) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nota inválida. Deve estar entre 0 e 5.");
+            }
+
+            RefeicaoAvalia avaliacao = RefeicaoAvaliaMapper.toEntity(dto, usuario, refeicao);
+            avaliacao.setDataAvaliacao(LocalDate.now());
+            refeicaoAvaliaRepository.save(avaliacao);
+
+            return RefeicaoAvaliaMapper.toResponse(avaliacao);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao avaliar refeição: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public RefeicaoAvaliaResponseDTO atualizarAvaliacaoRefeicao(RefeicaoAvaliaRequestDTO dto) {
+        try {
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            Refeicao refeicao = refeicaoRepository.findById(dto.getIdRefeicao())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Refeição não encontrada."));
+
+            RefeicaoAvalia avaliacao = refeicaoAvaliaRepository.findByUsuarioAndRefeicao(usuario, refeicao)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Avaliação não encontrada."));
+
+            if (dto.getNota() < 0 || dto.getNota() > 5) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nota inválida. Deve estar entre 0 e 5.");
+            }
+
+            boolean alterado = false;
+
+            if (avaliacao.getNota() != dto.getNota()) {
+                avaliacao.setNota(dto.getNota());
+                alterado = true;
+            }
+
+            if (!avaliacao.getComentario().equals(dto.getComentario())) {
+                avaliacao.setComentario(dto.getComentario());
+                alterado = true;
+            }
+
+            if (alterado) {
+                avaliacao.setDataAvaliacao(LocalDate.now());
+                refeicaoAvaliaRepository.save(avaliacao);
+            }
+
+            return RefeicaoAvaliaMapper.toResponse(avaliacao);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao atualizar avaliação: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public List<RefeicaoAvaliaResponseDTO> listarAvaliacoesPorIdRefeicao(int idRefeicao) {
+        try {
+            Refeicao refeicao = refeicaoRepository.findById(idRefeicao)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Refeição não encontrada."));
+
+            List<RefeicaoAvalia> avaliacoes = refeicaoAvaliaRepository.findByRefeicao(refeicao);
+            return avaliacoes.stream()
+                    .map(RefeicaoAvaliaMapper::toResponse)
+                    .collect(Collectors.toList());
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao listar avaliações da refeição: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public List<RefeicaoAvaliaResponseDTO> listarMinhasAvaliacoes() {
+        try {
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            List<RefeicaoAvalia> avaliacoes = refeicaoAvaliaRepository.findByUsuario(usuario);
+            return avaliacoes.stream()
+                    .map(RefeicaoAvaliaMapper::toResponse)
+                    .collect(Collectors.toList());
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao buscar avaliações: " + ex.getMessage());
+        }
+    }
+
+    public void alternarFavoritoRefeicao(int idRefeicao) {
+        try {
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            Refeicao refeicao = refeicaoRepository.findById(idRefeicao)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Refeição não encontrada."));
+
+            Optional<RefeicaoFavorito> favoritoExistente = refeicaoFavoritoRepository.findByUsuarioAndRefeicao(usuario, refeicao);
+
+            if (favoritoExistente.isPresent()) {
+                refeicaoFavoritoRepository.delete(favoritoExistente.get());
+            } else {
+                RefeicaoFavorito novoFavorito = RefeicaoFavoritoMapper.toEntity(usuario, refeicao);
+                refeicaoFavoritoRepository.save(novoFavorito);
+            }
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao alternar favorito.", ex);
+        }
+    }
+
+    @Transactional
+    public List<RefeicaoFavoritoResponseDTO> listarRefeicoesFavoritas() {
+        try {
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            List<RefeicaoFavorito> favoritos = refeicaoFavoritoRepository.findByUsuario(usuario);
+
+            List<Refeicao> refeicoes = favoritos.stream()
+                    .map(RefeicaoFavorito::getRefeicao)
+                    .collect(Collectors.toList());
+
+            Set<Integer> idsFavoritados = refeicoes.stream()
+                    .map(Refeicao::getIdRefeicao)
+                    .collect(Collectors.toSet());
+
+            return RefeicaoFavoritoMapper.toResponseList(refeicoes, idsFavoritados);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao listar favoritos.", ex);
         }
     }
 }
