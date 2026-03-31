@@ -406,5 +406,4 @@ public class UsuarioController {
         List<RefeicaoAvaliaResponseDTO> response = refeicaoService.listarMinhasAvaliacoes();
         return ResponseEntity.ok(response);
     }
-
 }
