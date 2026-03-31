@@ -1,6 +1,7 @@
 package com.api.meal4you.service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -90,7 +91,7 @@ public class RestauranteService {
             }
 
             Restaurante restaurante = RestauranteMapper.toEntity(dto, adminExistente);
-            restauranteRepository.saveAndFlush(restaurante);
+            restauranteRepository.saveAndFlush(Objects.requireNonNull(restaurante));
 
             return RestauranteMapper.toResponse(restaurante);
         } catch (ResponseStatusException ex) {
@@ -433,10 +434,10 @@ public class RestauranteService {
             Optional<RestauranteFavorito> favoritoExistente = restauranteFavoritoRepository.findByUsuarioAndRestaurante(usuario, restaurante);
 
             if (favoritoExistente.isPresent()) {
-                restauranteFavoritoRepository.delete(favoritoExistente.get());
+                restauranteFavoritoRepository.delete(Objects.requireNonNull(favoritoExistente.orElseThrow()));
             } else {
                 RestauranteFavorito novoFavorito = RestauranteMapper.toEntity(usuario, restaurante);
-                restauranteFavoritoRepository.save(novoFavorito);
+                restauranteFavoritoRepository.save(Objects.requireNonNull(novoFavorito));
             }
         } catch (ResponseStatusException ex) {
             throw ex;

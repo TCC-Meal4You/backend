@@ -2,6 +2,7 @@ package com.api.meal4you.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -55,7 +56,8 @@ public class IngredienteService {
             List<Restricao> restricoesValidadas = new ArrayList<>(); // Inicializa uma lista vazia
             
             if (dto.getRestricoesIds() != null && !dto.getRestricoesIds().isEmpty()) {
-                restricoesValidadas = restricaoRepository.findAllById(dto.getRestricoesIds());
+                List<Integer> restricoesIds = dto.getRestricoesIds();
+                restricoesValidadas = restricaoRepository.findAllById(Objects.requireNonNull(restricoesIds));
                 
                 if (restricoesValidadas.size() != dto.getRestricoesIds().size()) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Um ou mais IDs de restrição são inválidos.");
@@ -74,7 +76,7 @@ public class IngredienteService {
                                 .build())
                         .collect(Collectors.toList());
                 
-                ingredienteRestricaoRepository.saveAll(associacoes);
+                ingredienteRestricaoRepository.saveAll(Objects.requireNonNull(associacoes));
                 novoIngrediente.setRestricoes(associacoes);
             }
 
@@ -125,7 +127,7 @@ public class IngredienteService {
 
             ingredienteRestricaoRepository.deleteByIngrediente(ingrediente);
 
-            ingredienteRepository.delete(ingrediente);
+            ingredienteRepository.delete(Objects.requireNonNull(ingrediente));
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -77,7 +78,8 @@ public class RefeicaoService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Você já possui uma refeição com este nome no seu cardápio.");
             }
 
-            List<Ingrediente> ingredientes = ingredienteRepository.findAllById(dto.getIngredientesIds());
+            List<Integer> ingredientesIds = dto.getIngredientesIds();
+            List<Ingrediente> ingredientes = ingredienteRepository.findAllById(Objects.requireNonNull(ingredientesIds));
 
             if (ingredientes.size() != dto.getIngredientesIds().size()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Um ou mais IDs de ingredientes são inválidos.");
@@ -90,7 +92,7 @@ public class RefeicaoService {
             }
             
             Refeicao novaRefeicao = RefeicaoMapper.toEntity(dto, restaurante);
-            refeicaoRepository.save(novaRefeicao);
+            refeicaoRepository.save(Objects.requireNonNull(novaRefeicao));
 
             List<RefeicaoIngrediente> associacoes = ingredientes.stream()
                 .map(ingrediente -> RefeicaoIngrediente.builder()
@@ -99,7 +101,7 @@ public class RefeicaoService {
                     .build())
                 .collect(Collectors.toList());
             
-            refeicaoIngredienteRepository.saveAll(associacoes);
+            refeicaoIngredienteRepository.saveAll(Objects.requireNonNull(associacoes));
             novaRefeicao.setRefeicaoIngredientes(associacoes);
 
             return RefeicaoMapper.toResponse(novaRefeicao);
@@ -313,7 +315,8 @@ public class RefeicaoService {
 
                 refeicaoIngredienteRepository.deleteByRefeicao(refeicao);
 
-                List<Ingrediente> novosIngredientes = ingredienteRepository.findAllById(dto.getIngredientesIds());
+                List<Integer> novosIngredientesIds = dto.getIngredientesIds();
+                List<Ingrediente> novosIngredientes = ingredienteRepository.findAllById(Objects.requireNonNull(novosIngredientesIds));
                 if (novosIngredientes.size() != dto.getIngredientesIds().size()) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Um ou mais IDs de ingredientes são inválidos.");
                 }
@@ -326,7 +329,7 @@ public class RefeicaoService {
                 List<RefeicaoIngrediente> novasAssociacoes = novosIngredientes.stream()
                     .map(ingrediente -> RefeicaoIngrediente.builder().refeicao(refeicao).ingrediente(ingrediente).build())
                     .collect(Collectors.toList());
-                refeicaoIngredienteRepository.saveAll(novasAssociacoes);
+                refeicaoIngredienteRepository.saveAll(Objects.requireNonNull(novasAssociacoes));
                 refeicao.setRefeicaoIngredientes(novasAssociacoes);
                 
                 alterado = true;
@@ -524,10 +527,10 @@ public class RefeicaoService {
             Optional<RefeicaoFavorito> favoritoExistente = refeicaoFavoritoRepository.findByUsuarioAndRefeicao(usuario, refeicao);
 
             if (favoritoExistente.isPresent()) {
-                refeicaoFavoritoRepository.delete(favoritoExistente.get());
+                refeicaoFavoritoRepository.delete(Objects.requireNonNull(favoritoExistente.orElseThrow()));
             } else {
                 RefeicaoFavorito novoFavorito = RefeicaoFavoritoMapper.toEntity(usuario, refeicao);
-                refeicaoFavoritoRepository.save(novoFavorito);
+                refeicaoFavoritoRepository.save(Objects.requireNonNull(novoFavorito));
             }
         } catch (ResponseStatusException ex) {
             throw ex;
