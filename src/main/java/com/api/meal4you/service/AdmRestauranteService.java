@@ -1,6 +1,7 @@
 package com.api.meal4you.service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -130,7 +131,7 @@ public class AdmRestauranteService {
 
             tokenStore.removerTodosTokensDaPessoa(adm.getEmail(), "ADMIN");
             adm.setEmail(novoEmail);
-            admRepository.save(adm);
+            admRepository.save(Objects.requireNonNull(adm));
             return AdmRestauranteMapper.toResponse(adm);
         } catch (ResponseStatusException ex) {
             throw ex;
@@ -211,7 +212,7 @@ public class AdmRestauranteService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nenhuma alteração detectada.");
             }
 
-            admRepository.save(adm);
+            admRepository.save(Objects.requireNonNull(adm));
             return AdmRestauranteMapper.toResponse(adm);
         } catch (ResponseStatusException ex) {
             throw ex;
@@ -233,8 +234,9 @@ public class AdmRestauranteService {
             }
 
             restauranteRepository.findByAdmin(adm).ifPresent(restaurante -> {
+                var restauranteNaoNulo = Objects.requireNonNull(restaurante);
 
-                List<Refeicao> refeicoes = refeicaoRepository.findByRestaurante(restaurante);
+                List<Refeicao> refeicoes = refeicaoRepository.findByRestaurante(restauranteNaoNulo);
                 if(!refeicoes.isEmpty()) {
                     refeicoes.forEach(refeicaoIngredienteRepository::deleteByRefeicao);
                     refeicaoRepository.deleteAll(refeicoes);
@@ -246,9 +248,9 @@ public class AdmRestauranteService {
                     ingredienteRepository.deleteAll(ingredientes);
                 }
 
-                usuarioAvaliaRepository.deleteByRestaurante(restaurante);
-                restauranteFavoritoRepository.deleteByRestaurante(restaurante);
-                restauranteRepository.delete(restaurante);
+                usuarioAvaliaRepository.deleteByRestaurante(restauranteNaoNulo);
+                restauranteFavoritoRepository.deleteByRestaurante(restauranteNaoNulo);
+                restauranteRepository.delete(restauranteNaoNulo);
             });
 
             socialLoginRepository.deleteByAdm(adm);
@@ -274,7 +276,7 @@ public class AdmRestauranteService {
             // 2. Verificar se já existe um SocialLogin com esse provider e providerId
             Optional<SocialLogin> socialLoginExistente = socialLoginRepository.findByProviderAndProviderId("google", googleId);
             if (socialLoginExistente.isPresent()) {
-                SocialLogin sl = socialLoginExistente.get();
+                SocialLogin sl = socialLoginExistente.orElseThrow();
                 // Verificar se está vinculado a um Usuario
                 if (sl.getUsuario() != null) {
                     throw new ResponseStatusException(HttpStatus.CONFLICT, 
@@ -300,7 +302,7 @@ public class AdmRestauranteService {
                         .provider("google")
                         .providerId(googleId)
                         .build();
-                socialLoginRepository.save(socialLogin);
+                socialLoginRepository.save(Objects.requireNonNull(socialLogin));
                 adm.getSocialLogins().add(socialLogin);
             } else {
                 // 5. Se já existe, garantir que o SocialLogin está associado
@@ -312,11 +314,11 @@ public class AdmRestauranteService {
                 .provider("google")
                 .providerId(googleId)
                 .build();
-                    socialLoginRepository.save(socialLogin);
+                    socialLoginRepository.save(Objects.requireNonNull(socialLogin));
                     adm.getSocialLogins().add(socialLogin);
                 }
             }
-            admRepository.save(adm);
+            admRepository.save(Objects.requireNonNull(adm));
 
             // 6. Gerar token JWT e retornar
             String token = jwtUtil.gerarToken(adm.getEmail(), "ADMIN");

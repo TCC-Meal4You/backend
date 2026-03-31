@@ -3,6 +3,7 @@ package com.api.meal4you.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -36,11 +37,13 @@ public class GeminiService {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         String url = String.format(API_URL, apiKey);
+        String safeUrl = Objects.requireNonNull(url);
+        HttpMethod method = Objects.requireNonNull(HttpMethod.POST);
 
         try {
             ResponseEntity<Map<String, Object>> response = new RestTemplate().exchange(
-                    url,
-                    HttpMethod.POST,
+                    safeUrl,
+                    method,
                     entity,
                     new ParameterizedTypeReference<>() {
                     });

@@ -7,6 +7,7 @@ import com.api.meal4you.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.api.meal4you.service.UsuarioService;
+import com.api.meal4you.service.RefeicaoService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final RefeicaoService refeicaoService;
 
     @Operation(
         summary = "Enviar código de verificação",
@@ -275,14 +278,14 @@ public class UsuarioController {
         @ApiResponse(responseCode = "500", description = "Erro ao criar avaliação", content = @Content)
     })
     @SecurityRequirement(name = "bearerAuth")
-    @PostMapping("/avaliar")
+    @PostMapping("/restaurantes/avaliar")
     public ResponseEntity<UsuarioAvaliaResponseDTO> avaliarRestaurante(@RequestBody UsuarioAvaliaRequestDTO dto) {
         UsuarioAvaliaResponseDTO response = usuarioService.avaliarRestaurante(dto);
         return ResponseEntity.ok(response);
     }
 
     @Operation(
-        summary = "Atualizar avaliação",
+        summary = "Atualizar avaliação do restaurante",
         description = "Atualiza uma avaliação existente do usuário. A data da avaliação será atualizada para a data atual."
     )
     @ApiResponses(value = {
@@ -293,14 +296,14 @@ public class UsuarioController {
         @ApiResponse(responseCode = "500", description = "Erro ao atualizar avaliação", content = @Content)
     })
     @SecurityRequirement(name = "bearerAuth")
-    @PutMapping("/atualizar-avaliacao")
+    @PutMapping("/restaurantes/atualizar-avaliacao")
     public ResponseEntity<UsuarioAvaliaResponseDTO> atualizarAvaliacao(@RequestBody UsuarioAvaliaRequestDTO dto) {
         UsuarioAvaliaResponseDTO response = usuarioService.atualizarAvaliacao(dto);
         return ResponseEntity.ok(response);
     }
 
     @Operation(
-        summary = "Ver minhas avaliações",
+        summary = "Ver minhas avaliações de restaurantes",
         description = "Retorna todas as avaliações de todos os restaurantes feitas pelo usuário autenticado."
     )
     @ApiResponses(value = {
@@ -309,14 +312,14 @@ public class UsuarioController {
         @ApiResponse(responseCode = "500", description = "Erro ao buscar avaliações", content = @Content)
     })
     @SecurityRequirement(name = "bearerAuth")
-    @GetMapping("/ver-minhas-avaliacoes")
+    @GetMapping("/restaurantes/ver-minhas-avaliacoes")
     public ResponseEntity<List<UsuarioAvaliaResponseDTO>> verMinhasAvaliacoes() {
         List<UsuarioAvaliaResponseDTO> response = usuarioService.verMinhasAvaliacoes();
         return ResponseEntity.ok(response);
     }
 
     @Operation(
-        summary = "Excluir avaliação",
+        summary = "Excluir avaliação de restaurante",
         description = "Remove uma avaliação específica de um restaurante feita pelo usuário autenticado."
     )
     @ApiResponses(value = {
@@ -326,9 +329,82 @@ public class UsuarioController {
         @ApiResponse(responseCode = "500", description = "Erro ao excluir avaliação", content = @Content)
     })
     @SecurityRequirement(name = "bearerAuth")
-    @DeleteMapping("/excluir-avaliacao")
-    public ResponseEntity<Map<String, String>> excluirAvaliacao(@RequestParam Integer idRestaurante) {
+    @DeleteMapping("/restaurantes/excluir-avaliacao")
+    public ResponseEntity<Map<String, String>> excluirAvaliacaoRestaurante(@RequestParam Integer idRestaurante) {
         usuarioService.deletarAvaliacao(idRestaurante);
         return ResponseEntity.ok(Map.of("mensagem", "Avaliação excluída com sucesso."));
     }
+
+    @Operation(
+        summary = "Avaliar refeição",
+        description = "Cria uma nova avaliação para uma refeição. O usuário só pode avaliar cada refeição uma vez. Nota deve estar entre 0 e 5."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Avaliação criada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Nota inválida (deve estar entre 0 e 5)", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Refeição não encontrada", content = @Content),
+        @ApiResponse(responseCode = "409", description = "Usuário já avaliou esta refeição", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao criar avaliação", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/refeicoes/avaliar")
+    public ResponseEntity<RefeicaoAvaliaResponseDTO> avaliarRefeicao(@RequestBody RefeicaoAvaliaRequestDTO dto) {
+        RefeicaoAvaliaResponseDTO response = refeicaoService.avaliarRefeicao(dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Atualizar avaliação da refeição",
+        description = "Atualiza uma avaliação existente do usuário. A data da avaliação será atualizada para a data atual."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Avaliação atualizada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Nota inválida (deve estar entre 0 e 5)", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Refeição ou avaliação não encontrados", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao atualizar avaliação", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @PutMapping("/refeicoes/atualizar-avaliacao")
+    public ResponseEntity<RefeicaoAvaliaResponseDTO> atualizarAvaliacaoRefeicao(@RequestBody RefeicaoAvaliaRequestDTO dto) {
+        RefeicaoAvaliaResponseDTO response = refeicaoService.atualizarAvaliacaoRefeicao(dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Listar avaliações de uma refeição",
+        description = "Retorna todas as avaliações feitas por usuários em uma refeição específica.\n" +
+                      "Utilizado na tela de detalhes na aba avaliações da refeição.\n " +
+                      "Método para usuários e administradores."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de avaliações retornada com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Refeição não encontrada", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao listar avaliações", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/refeicoes/{id}/avaliacoes")
+    public ResponseEntity<List<RefeicaoAvaliaResponseDTO>> listarAvaliacoesPorIdRefeicao(@PathVariable int id) {
+        List<RefeicaoAvaliaResponseDTO> response = refeicaoService.listarAvaliacoesPorIdRefeicao(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Ver minhas avaliações de refeições",
+        description = "Retorna todas as avaliações de todas as refeições feitas pelo usuário autenticado."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de avaliações retornada com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao buscar avaliações", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/refeicoes/minhas-avaliacoes")
+    public ResponseEntity<List<RefeicaoAvaliaResponseDTO>> listarMinhasAvaliacoes() {
+        List<RefeicaoAvaliaResponseDTO> response = refeicaoService.listarMinhasAvaliacoes();
+        return ResponseEntity.ok(response);
+    }
+
 }
