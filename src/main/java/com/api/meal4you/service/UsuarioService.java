@@ -2,6 +2,7 @@ package com.api.meal4you.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -200,7 +201,7 @@ public class UsuarioService {
 
             tokenStore.removerTodosTokensDaPessoa(usuario.getEmail(), "USUARIO");
             usuario.setEmail(novoEmail);
-            usuarioRepository.save(usuario);
+            usuarioRepository.save(Objects.requireNonNull(usuario));
             return UsuarioMapper.toResponse(usuario);
         } catch (ResponseStatusException ex) {
             throw ex;
@@ -238,7 +239,7 @@ public class UsuarioService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nenhuma alteração detectada.");
             }
 
-            usuarioRepository.save(usuario);
+            usuarioRepository.save(Objects.requireNonNull(usuario));
             return UsuarioMapper.toResponse(usuario);
         } catch (ResponseStatusException ex) {
             throw ex;
@@ -263,7 +264,8 @@ public class UsuarioService {
                 return UsuarioMapper.toResponse(usuario);
             }
 
-            List<Restricao> novasRestricoes = restricaoRepository.findAllById(dto.getRestricaoIds());
+            List<Integer> restricaoIds = dto.getRestricaoIds();
+            List<Restricao> novasRestricoes = restricaoRepository.findAllById(Objects.requireNonNull(restricaoIds));
 
             if (novasRestricoes.size() != dto.getRestricaoIds().size()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Um ou mais IDs de restrição são inválidos.");
@@ -276,7 +278,7 @@ public class UsuarioService {
                             .build())
                     .collect(Collectors.toList());
 
-            usuarioRestricaoRepository.saveAll(novasAssociacoes);
+            usuarioRestricaoRepository.saveAll(Objects.requireNonNull(novasAssociacoes));
 
             usuario.setUsuarioRestricoes(novasAssociacoes);
             return UsuarioMapper.toResponse(usuario);
@@ -301,7 +303,7 @@ public class UsuarioService {
             // 2. Verificar se já existe um SocialLogin com esse provider e providerId
             Optional<SocialLogin> socialLoginExistente = socialLoginRepository.findByProviderAndProviderId("google", googleId);
             if (socialLoginExistente.isPresent()) {
-                SocialLogin sl = socialLoginExistente.get();
+                SocialLogin sl = socialLoginExistente.orElseThrow();
                 // Verificar se está vinculado a um Admin
                 if (sl.getAdm() != null) {
                     throw new ResponseStatusException(HttpStatus.CONFLICT, 
@@ -327,7 +329,7 @@ public class UsuarioService {
                         .provider("google")
                         .providerId(googleId)
                         .build();
-                socialLoginRepository.save(socialLogin);
+                socialLoginRepository.save(Objects.requireNonNull(socialLogin));
                 usuario.getSocialLogins().add(socialLogin);
             } else {
                 // 5. Se já existe, garantir que o SocialLogin está associado
@@ -339,11 +341,11 @@ public class UsuarioService {
                             .provider("google")
                             .providerId(googleId)
                             .build();
-                    socialLoginRepository.save(socialLogin);
+                    socialLoginRepository.save(Objects.requireNonNull(socialLogin));
                     usuario.getSocialLogins().add(socialLogin);
                 }
             }
-            usuarioRepository.save(usuario);
+            usuarioRepository.save(Objects.requireNonNull(usuario));
 
             // 6. Gerar token JWT e retornar
             String token = jwtUtil.gerarToken(usuario.getEmail(), "USUARIO");
@@ -530,17 +532,18 @@ public class UsuarioService {
     @Transactional
     public UsuarioAvaliaResponseDTO deletarAvaliacao(Integer idRestaurante) {
         try {
+            Integer idRestauranteNaoNulo = Objects.requireNonNull(idRestaurante);
             String emailLogado = getUsuarioLogadoEmail();
             Usuario usuario = usuarioRepository.findByEmail(emailLogado)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
 
-            Restaurante restaurante = restauranteRepository.findById(idRestaurante)
+            Restaurante restaurante = restauranteRepository.findById(idRestauranteNaoNulo)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restaurante não encontrado."));
 
             UsuarioAvalia avaliacao = usuarioAvaliaRepository.findByUsuarioAndRestaurante(usuario, restaurante)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Avaliação não encontrada."));
 
-            usuarioAvaliaRepository.delete(avaliacao);
+            usuarioAvaliaRepository.delete(Objects.requireNonNull(avaliacao));
             return UsuarioAvaliaMapper.toResponse(avaliacao);
         } catch (ResponseStatusException ex) {
             throw ex;
