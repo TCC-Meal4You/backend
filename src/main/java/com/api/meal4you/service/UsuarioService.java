@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
+import com.api.meal4you.dto.RecomendacaoKNNResponseDTO;
 import com.api.meal4you.dto.RedefinirSenhaRequestDTO;
 import com.api.meal4you.dto.UsuarioAvaliaRequestDTO;
 import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
@@ -62,6 +63,7 @@ public class UsuarioService {
     private final UsuarioAvaliaRepository usuarioAvaliaRepository;
     private final RestauranteFavoritoRepository restauranteFavoritoRepository;
     private final AdmRestauranteRepository admRepository;
+    private final RecomendacoesKNN RecomendacoesKNN;
 
     public String getUsuarioLogadoEmail() {
         try {
@@ -288,6 +290,38 @@ public class UsuarioService {
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Erro ao atualizar as restrições do usuário: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public RecomendacaoKNNResponseDTO obterRecomendacoesKnnRefeicoes() {
+        try {
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            return RecomendacoesKNN.obterRecomendacaoRefeicaoKnn(usuario.getIdUsuario());
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao obter recomendações: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public RecomendacaoKNNResponseDTO obterRecomendacoesKnnRestaurantes() {
+        try {
+            String emailLogado = getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            return RecomendacoesKNN.obterRecomendacaoRestauranteKnn(usuario.getIdUsuario());
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao obter recomendações: " + ex.getMessage());
         }
     }
 

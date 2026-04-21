@@ -3,7 +3,6 @@ package com.api.meal4you.controller;
 import java.util.List;
 import java.util.Map;
 
-import com.api.meal4you.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +15,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.api.meal4you.dto.AtualizarEmailRequestDTO;
+import com.api.meal4you.dto.GoogleLoginRequestDTO;
+import com.api.meal4you.dto.LoginRequestDTO;
+import com.api.meal4you.dto.LoginResponseDTO;
+import com.api.meal4you.dto.RecomendacaoKNNResponseDTO;
+import com.api.meal4you.dto.RedefinirSenhaRequestDTO;
+import com.api.meal4you.dto.UsuarioAvaliaRequestDTO;
+import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
+import com.api.meal4you.dto.UsuarioRequestDTO;
+import com.api.meal4you.dto.UsuarioResponseDTO;
+import com.api.meal4you.dto.UsuarioRestricaoRequestDTO;
+import com.api.meal4you.dto.VerificaEmailRequestDTO;
 import com.api.meal4you.service.UsuarioService;
 import com.api.meal4you.service.RefeicaoService;
 
@@ -170,6 +181,40 @@ public class UsuarioController {
         return ResponseEntity.ok(response);
     }
     
+    @Operation(
+        summary = "Obter recomendações de refeições via modelo KNN",
+        description = "Retorna uma lista de IDs de refeições recomendadas de acordo com as avaliações deste e de outros usuários com gostos similares."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Recomendações retornadas com sucesso"),
+        @ApiResponse(responseCode = "400", description = "ID do usuário inválido ou problema ao solicitar modelo"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao buscar recomendações", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/recomendacoes-refeicoes-knn")
+    public ResponseEntity<RecomendacaoKNNResponseDTO> obterRecomendacoesKnnRefeicoes() {
+        RecomendacaoKNNResponseDTO response = usuarioService.obterRecomendacoesKnnRefeicoes();
+        return ResponseEntity.ok(response);
+    }
+    
+    @Operation(
+        summary = "Obter recomendações de restaurantes via modelo KNN",
+        description = "Retorna uma lista de IDs de restaurantes recomendados de acordo com as avaliações deste e de outros usuários com gostos similares."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Recomendações retornadas com sucesso"),
+        @ApiResponse(responseCode = "400", description = "ID do usuário inválido ou problema ao solicitar modelo"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao buscar recomendações", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/recomendacoes-restaurantes-knn")
+    public ResponseEntity<RecomendacaoKNNResponseDTO> obterRecomendacoesKnnRestaurantes() {
+        RecomendacaoKNNResponseDTO response = usuarioService.obterRecomendacoesKnnRestaurantes();
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(
         summary = "Login de usuário",
         description = "Autentica um usuário com e-mail e senha. Retorna um token JWT para ser usado nas requisições autenticadas."
