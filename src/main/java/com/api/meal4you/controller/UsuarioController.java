@@ -21,6 +21,8 @@ import com.api.meal4you.dto.LoginRequestDTO;
 import com.api.meal4you.dto.LoginResponseDTO;
 import com.api.meal4you.dto.RecomendacaoKNNResponseDTO;
 import com.api.meal4you.dto.RedefinirSenhaRequestDTO;
+import com.api.meal4you.dto.RefeicaoAvaliaRequestDTO;
+import com.api.meal4you.dto.RefeicaoAvaliaResponseDTO;
 import com.api.meal4you.dto.UsuarioAvaliaRequestDTO;
 import com.api.meal4you.dto.UsuarioAvaliaResponseDTO;
 import com.api.meal4you.dto.UsuarioRequestDTO;
