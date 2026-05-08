@@ -479,6 +479,30 @@ public class RefeicaoService {
     }
 
     @Transactional
+    public RefeicaoAvaliaResponseDTO deletarAvaliacaoRefeicao(Integer idRefeicao) {
+        try {
+            Integer idRefeicaoNaoNulo = Objects.requireNonNull(idRefeicao);
+            String emailLogado = usuarioService.getUsuarioLogadoEmail();
+            Usuario usuario = usuarioRepository.findByEmail(emailLogado)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado."));
+
+            Refeicao refeicao = refeicaoRepository.findById(idRefeicaoNaoNulo)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Refeição não encontrada."));
+
+            RefeicaoAvalia avaliacao = refeicaoAvaliaRepository.findByUsuarioAndRefeicao(usuario, refeicao)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Avaliação não encontrada."));
+
+            refeicaoAvaliaRepository.delete(Objects.requireNonNull(avaliacao));
+            return RefeicaoAvaliaMapper.toResponse(avaliacao);
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao deletar avaliação da refeição: " + ex.getMessage());
+        }
+    }
+
+    @Transactional
     public List<RefeicaoAvaliaResponseDTO> listarAvaliacoesPorIdRefeicao(int idRefeicao) {
         try {
             Refeicao refeicao = refeicaoRepository.findById(idRefeicao)
