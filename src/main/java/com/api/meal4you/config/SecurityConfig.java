@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/usuarios/refeicoes/atualizar-avaliacao").hasRole("USUARIO") // atualizar avaliação de refeição
                         .requestMatchers(HttpMethod.GET, "/usuarios/refeicoes/{id}/avaliacoes").hasAnyRole("ADMIN", "USUARIO") // listar avaliações de uma refeição
                         .requestMatchers(HttpMethod.GET, "/usuarios/refeicoes/minhas-avaliacoes").hasRole("USUARIO") // listar minhas avaliações de refeições
+                        .requestMatchers(HttpMethod.DELETE, "/usuarios/refeicoes/excluir-avaliacao").hasRole("USUARIO") // excluir avaliação de refeição
                         .requestMatchers("/usuarios/**").hasRole("USUARIO") // outros métodos
                         
                         //Admin 
