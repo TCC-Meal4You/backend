@@ -420,6 +420,23 @@ public class UsuarioController {
     }
 
     @Operation(
+        summary = "Excluir avaliação de refeição",
+        description = "Remove uma avaliação específica de uma refeição feita pelo usuário autenticado."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Avaliação excluída com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Refeição ou avaliação não encontrados", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Erro ao excluir avaliação", content = @Content)
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @DeleteMapping("/refeicoes/excluir-avaliacao")
+    public ResponseEntity<Map<String, String>> excluirAvaliacaoRefeicao(@RequestParam Integer idRefeicao) {
+        refeicaoService.deletarAvaliacaoRefeicao(idRefeicao);
+        return ResponseEntity.ok(Map.of("mensagem", "Avaliação excluída com sucesso."));
+    }
+
+    @Operation(
         summary = "Listar avaliações de uma refeição",
         description = "Retorna todas as avaliações feitas por usuários em uma refeição específica.\n" +
                       "Utilizado na tela de detalhes na aba avaliações da refeição.\n " +
