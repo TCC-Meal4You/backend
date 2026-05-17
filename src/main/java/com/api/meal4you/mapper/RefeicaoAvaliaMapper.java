@@ -15,6 +15,7 @@ public class RefeicaoAvaliaMapper {
                 .nota(refeicaoAvalia.getNota())
                 .comentario(refeicaoAvalia.getComentario())
                 .dataAvaliacao(refeicaoAvalia.getDataAvaliacao())
+                .nomeUsuario(refeicaoAvalia.getUsuario() != null ? refeicaoAvalia.getUsuario().getNome() : null)
                 .build();
     }
 
