@@ -26,4 +26,6 @@ public class UsuarioAvaliaResponseDTO {
 
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dataAvaliacao;
+    
+    private String nomeUsuario;
 }

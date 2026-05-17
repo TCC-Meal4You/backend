@@ -15,6 +15,7 @@ public class UsuarioAvaliaMapper {
                 .nota(usuarioAvalia.getNota())
                 .comentario(usuarioAvalia.getComentario())
                 .dataAvaliacao(usuarioAvalia.getDataAvaliacao())
+                .nomeUsuario(usuarioAvalia.getUsuario() != null ? usuarioAvalia.getUsuario().getNome() : null)
                 .build();
     }
 
