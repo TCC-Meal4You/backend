@@ -34,6 +34,8 @@ import com.api.meal4you.repository.IngredienteRestricaoRepository;
 import com.api.meal4you.repository.RefeicaoIngredienteRepository;
 import com.api.meal4you.repository.RefeicaoRepository;
 import com.api.meal4you.repository.RestauranteFavoritoRepository;
+import com.api.meal4you.repository.RefeicaoAvaliaRepository;
+import com.api.meal4you.repository.RefeicaoFavoritoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
 import com.api.meal4you.repository.UsuarioAvaliaRepository;
 import com.api.meal4you.repository.UsuarioRepository;
@@ -51,6 +53,8 @@ public class RestauranteService {
     private final IngredienteRestricaoRepository ingredienteRestricaoRepository;
     private final RefeicaoRepository refeicaoRepository;
     private final RefeicaoIngredienteRepository refeicaoIngredienteRepository;
+    private final RefeicaoAvaliaRepository refeicaoAvaliaRepository;
+    private final RefeicaoFavoritoRepository refeicaoFavoritoRepository;
     private final UsuarioAvaliaRepository usuarioAvaliaRepository;
     private final UsuarioService usuarioService;
     private final UsuarioRepository usuarioRepository;
@@ -236,6 +240,8 @@ public class RestauranteService {
             List<Refeicao> refeicoes = refeicaoRepository.findByRestaurante(restaurante);
             if (!refeicoes.isEmpty()) {
                 refeicoes.forEach(refeicaoIngredienteRepository::deleteByRefeicao);
+                refeicoes.forEach(refeicaoAvaliaRepository::deleteByRefeicao);
+                refeicoes.forEach(refeicaoFavoritoRepository::deleteByRefeicao);
                 refeicaoRepository.deleteAll(refeicoes);
             }
 
