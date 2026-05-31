@@ -35,6 +35,7 @@ import com.api.meal4you.mapper.UsuarioMapper;
 import com.api.meal4you.repository.AdmRestauranteRepository;
 import com.api.meal4you.repository.RestauranteFavoritoRepository;
 import com.api.meal4you.repository.RestauranteRepository;
+import com.api.meal4you.repository.RefeicaoFavoritoRepository;
 import com.api.meal4you.repository.RestricaoRepository;
 import com.api.meal4you.repository.SocialLoginRepository;
 import com.api.meal4you.repository.UsuarioAvaliaRepository;
@@ -62,6 +63,7 @@ public class UsuarioService {
     private final RestauranteRepository restauranteRepository;
     private final UsuarioAvaliaRepository usuarioAvaliaRepository;
     private final RestauranteFavoritoRepository restauranteFavoritoRepository;
+    private final RefeicaoFavoritoRepository refeicaoFavoritoRepository;
     private final AdmRestauranteRepository admRepository;
     private final RecomendacoesKNN RecomendacoesKNN;
 
@@ -180,6 +182,7 @@ public class UsuarioService {
             socialLoginRepository.deleteByUsuario(usuario);
             usuarioRestricaoRepository.deleteByUsuario(usuario);
             usuarioAvaliaRepository.deleteByUsuario(usuario);
+            refeicaoFavoritoRepository.deleteByUsuario(usuario);
             restauranteFavoritoRepository.deleteByUsuario(usuario);
             usuarioRepository.delete(usuario);
         } catch (ResponseStatusException ex) {
