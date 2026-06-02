@@ -25,7 +25,18 @@ public class GeminiService {
     @Value("${gemini.api.key}")
     private String apiKey;
 
-    private static final String API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=%s";
+    @Value("${gemini.api.url:https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=%s}")
+    private String apiUrl;
+
+    private final RestTemplate restTemplate;
+
+    public GeminiService() {
+        this(new RestTemplate());
+    }
+
+    GeminiService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     public String gerarListaDeRestricoes(String prompt) {
         Map<String, Object> part = Map.of("text", prompt);
@@ -36,12 +47,12 @@ public class GeminiService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-        String url = String.format(API_URL, apiKey);
+        String url = String.format(apiUrl, apiKey);
         String safeUrl = Objects.requireNonNull(url);
         HttpMethod method = Objects.requireNonNull(HttpMethod.POST);
 
         try {
-            ResponseEntity<Map<String, Object>> response = new RestTemplate().exchange(
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                     safeUrl,
                     method,
                     entity,
