@@ -16,6 +16,11 @@ import lombok.Data;
 @Service
 public class GooglePeopleApiService {
 
+    @FunctionalInterface
+    public interface ConnectionFactory {
+        HttpURLConnection openConnection(URL url) throws IOException;
+    }
+
     @Data
     @AllArgsConstructor
     public static class GoogleUserInfo {
@@ -24,10 +29,26 @@ public class GooglePeopleApiService {
         private String name;
     }
 
+    private static final String API_URL = "https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses";
+
+    private final ConnectionFactory connectionFactory;
+
+    public GooglePeopleApiService() {
+        this(GooglePeopleApiService::openDefaultConnection);
+    }
+
+    GooglePeopleApiService(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
+    }
+
+    private static HttpURLConnection openDefaultConnection(URL url) throws IOException {
+        return (HttpURLConnection) url.openConnection();
+    }
+
     public GoogleUserInfo getUserInfo(String accessToken) {
         try {
-            URL url = new URL("https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            URL url = new URL(API_URL);
+            HttpURLConnection conn = connectionFactory.openConnection(url);
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Authorization", "Bearer " + accessToken);
             conn.setRequestProperty("Accept", "application/json");
